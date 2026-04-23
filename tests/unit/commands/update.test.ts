@@ -89,6 +89,33 @@ describe('update command', () => {
     ).rejects.toThrow('Task 999 not found');
   });
 
+  it('appends note to task', async () => {
+    const program = buildProgram();
+    await program.parseAsync([
+      'node',
+      'test',
+      'update',
+      '1',
+      '--file',
+      file,
+      '--note',
+      'tried X, failed',
+    ]);
+
+    const content = await readFile(file, 'utf-8');
+    expect(content).toContain('> tried X, failed');
+  });
+
+  it('appends multiple notes', async () => {
+    const program = buildProgram();
+    await program.parseAsync(['node', 'test', 'update', '1', '--file', file, '--note', 'note 1']);
+    await program.parseAsync(['node', 'test', 'update', '1', '--file', file, '--note', 'note 2']);
+
+    const content = await readFile(file, 'utf-8');
+    expect(content).toContain('> note 1');
+    expect(content).toContain('> note 2');
+  });
+
   it('errors when no update options given', async () => {
     const program = buildProgram();
     await expect(

@@ -22,6 +22,7 @@ export function createUpdateCommand(): Command {
     .option('--type <value>', 'New type')
     .option('--status <value>', 'New status')
     .option('--depends-on <ids>', 'Comma-separated task IDs this depends on')
+    .option('--note <text>', 'Append a note to the task')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
     .action(async (idStr: string, opts) => {
@@ -39,7 +40,8 @@ export function createUpdateCommand(): Command {
         !opts.scope &&
         !opts.type &&
         !opts.status &&
-        opts.dependsOn === undefined
+        opts.dependsOn === undefined &&
+        !opts.note
       ) {
         throw validationError(
           'No update options provided. Use --description, --priority, --scope, --type, or --status',
@@ -81,6 +83,10 @@ export function createUpdateCommand(): Command {
           );
         }
         task.status = opts.status.toLowerCase() as Status;
+      }
+
+      if (opts.note) {
+        task.extraLines.push(`> ${opts.note}`);
       }
 
       if (opts.dependsOn !== undefined) {

@@ -9,7 +9,7 @@ import {
   type Status,
 } from '../core/task.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
-import { formatJson, formatTaskDetail } from '../shared/output.js';
+import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
 
 export function createUpdateCommand(): Command {
@@ -32,13 +32,7 @@ export function createUpdateCommand(): Command {
         throw validationError(`Invalid task ID: ${idStr}`);
       }
 
-      if (
-        !opts.description &&
-        !opts.priority &&
-        !opts.scope &&
-        !opts.type &&
-        !opts.status
-      ) {
+      if (!opts.description && !opts.priority && !opts.scope && !opts.type && !opts.status) {
         throw validationError(
           'No update options provided. Use --description, --priority, --scope, --type, or --status',
         );
@@ -68,9 +62,7 @@ export function createUpdateCommand(): Command {
       if (opts.scope) task.scope = opts.scope;
       if (opts.type) {
         if (!isValidType(opts.type)) {
-          throw validationError(
-            `Invalid type: ${opts.type}. Use: feature, bug, task, chore`,
-          );
+          throw validationError(`Invalid type: ${opts.type}. Use: feature, bug, task, chore`);
         }
         task.type = opts.type.toLowerCase() as TaskType;
       }

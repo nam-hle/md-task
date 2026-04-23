@@ -53,14 +53,12 @@ export function applyDefaults(input: TaskInput, id: number): Task {
     id,
     description: input.description,
     priority: isValidPriority(input.priority ?? '')
-      ? (input.priority!.toLowerCase() as Priority)
+      ? ((input.priority ?? '').toLowerCase() as Priority)
       : 'medium',
     scope: input.scope ?? 'general',
-    type: isValidType(input.type ?? '')
-      ? (input.type!.toLowerCase() as TaskType)
-      : 'task',
+    type: isValidType(input.type ?? '') ? ((input.type ?? '').toLowerCase() as TaskType) : 'task',
     status: isValidStatus(input.status ?? '')
-      ? (input.status!.toLowerCase() as Status)
+      ? ((input.status ?? '').toLowerCase() as Status)
       : 'todo',
     created: today(),
     extraLines: [],

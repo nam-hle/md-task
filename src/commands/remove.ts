@@ -31,6 +31,7 @@ export function createRemoveCommand(): Command {
         throw taskNotFound(id);
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index validated by findIndex above
       const removed = taskFile.tasks[taskIndex]!;
       taskFile.tasks.splice(taskIndex, 1);
 

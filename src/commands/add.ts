@@ -3,7 +3,7 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { applyDefaults, type TaskInput } from '../core/task.js';
 import { nextId } from '../core/id.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
-import { formatJson, formatTaskDetail } from '../shared/output.js';
+import { formatJson } from '../shared/output.js';
 import { validationError } from '../shared/errors.js';
 
 const EMPTY_FILE = '# Tasks\n';

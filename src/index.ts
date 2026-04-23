@@ -9,10 +9,7 @@ import { MtaskError } from './shared/errors.js';
 
 const program = new Command();
 
-program
-  .name('mtask')
-  .description('CLI for managing tasks as markdown')
-  .version('0.1.0');
+program.name('mtask').description('CLI for managing tasks as markdown').version('0.1.0');
 
 program.addCommand(createAddCommand());
 program.addCommand(createListCommand());

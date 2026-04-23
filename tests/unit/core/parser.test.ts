@@ -93,9 +93,7 @@ describe('serializeTaskFile', () => {
     expect(reparsed.tasks).toHaveLength(parsed.tasks.length);
     for (let i = 0; i < parsed.tasks.length; i++) {
       expect(reparsed.tasks[i]!.id).toBe(parsed.tasks[i]!.id);
-      expect(reparsed.tasks[i]!.description).toBe(
-        parsed.tasks[i]!.description,
-      );
+      expect(reparsed.tasks[i]!.description).toBe(parsed.tasks[i]!.description);
       expect(reparsed.tasks[i]!.priority).toBe(parsed.tasks[i]!.priority);
       expect(reparsed.tasks[i]!.status).toBe(parsed.tasks[i]!.status);
     }

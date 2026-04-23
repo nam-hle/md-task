@@ -53,8 +53,17 @@ describe('add command', () => {
   it('applies custom attributes', async () => {
     const program = buildProgram();
     await program.parseAsync([
-      'node', 'test', 'add', '--file', file,
-      '--priority', 'high', '--scope', 'backend', '--type', 'bug',
+      'node',
+      'test',
+      'add',
+      '--file',
+      file,
+      '--priority',
+      'high',
+      '--scope',
+      'backend',
+      '--type',
+      'bug',
       'Fix login',
     ]);
 
@@ -67,7 +76,14 @@ describe('add command', () => {
   it('outputs JSON when --format json', async () => {
     const program = buildProgram();
     await program.parseAsync([
-      'node', 'test', 'add', '--file', file, '--format', 'json', 'JSON task',
+      'node',
+      'test',
+      'add',
+      '--file',
+      file,
+      '--format',
+      'json',
+      'JSON task',
     ]);
 
     const output = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];

@@ -45,8 +45,16 @@ describe('update command', () => {
   it('updates multiple attributes', async () => {
     const program = buildProgram();
     await program.parseAsync([
-      'node', 'test', 'update', '1', '--file', file,
-      '--priority', 'critical', '--description', 'Updated desc',
+      'node',
+      'test',
+      'update',
+      '1',
+      '--file',
+      file,
+      '--priority',
+      'critical',
+      '--description',
+      'Updated desc',
     ]);
 
     const content = await readFile(file, 'utf-8');
@@ -57,8 +65,16 @@ describe('update command', () => {
   it('outputs JSON when --format json', async () => {
     const program = buildProgram();
     await program.parseAsync([
-      'node', 'test', 'update', '1', '--file', file,
-      '--format', 'json', '--status', 'done',
+      'node',
+      'test',
+      'update',
+      '1',
+      '--file',
+      file,
+      '--format',
+      'json',
+      '--status',
+      'done',
     ]);
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];

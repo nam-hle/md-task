@@ -23,8 +23,8 @@ function parseTagLine(line: string): Map<string, string> {
   for (const part of parts) {
     const trimmed = part.trim();
     const match = TAG_RE.exec(trimmed);
-    if (match) {
-      tags.set(match[1]!.toLowerCase(), match[2]!.trim());
+    if (match?.[1] && match[2] !== undefined) {
+      tags.set(match[1].toLowerCase(), match[2].trim());
     }
   }
   return tags;
@@ -69,7 +69,7 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
   }
 
   if (!description && tagMap.has('description')) {
-    description = tagMap.get('description')!;
+    description = tagMap.get('description') ?? '';
     tagMap.delete('description');
   }
 
@@ -85,14 +85,10 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
   return {
     id,
     description,
-    priority: isValidPriority(priorityRaw)
-      ? (priorityRaw.toLowerCase() as Priority)
-      : 'medium',
+    priority: isValidPriority(priorityRaw) ? (priorityRaw.toLowerCase() as Priority) : 'medium',
     scope: tagMap.get('scope') ?? 'general',
     type: isValidType(typeRaw) ? (typeRaw.toLowerCase() as TaskType) : 'task',
-    status: isValidStatus(statusRaw)
-      ? (statusRaw.toLowerCase() as Status)
-      : 'todo',
+    status: isValidStatus(statusRaw) ? (statusRaw.toLowerCase() as Status) : 'todo',
     created: tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
     extraLines,
   };
@@ -113,7 +109,7 @@ export function parseTaskFile(content: string): TaskFile {
       if (currentBlock) {
         blocks.push(currentBlock);
       }
-      currentBlock = { id: parseInt(headingMatch[1]!, 10), lines: [] };
+      currentBlock = { id: parseInt(headingMatch[1] ?? '0', 10), lines: [] };
     } else if (currentBlock) {
       currentBlock.lines.push(line);
     } else {

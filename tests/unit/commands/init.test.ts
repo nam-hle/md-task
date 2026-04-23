@@ -48,8 +48,8 @@ describe('init command', () => {
   it('errors when file already exists', async () => {
     await writeFile(file, '# Tasks\n', 'utf-8');
     const program = buildProgram();
-    await expect(
-      program.parseAsync(['node', 'test', 'init', '--file', file]),
-    ).rejects.toThrow('already exists');
+    await expect(program.parseAsync(['node', 'test', 'init', '--file', file])).rejects.toThrow(
+      'already exists',
+    );
   });
 });

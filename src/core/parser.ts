@@ -92,12 +92,13 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
     created: tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
     updated:
       tagMap.get('updated') ?? tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
-    depends: (tagMap.get('depends') ?? '')
-      ? (tagMap.get('depends') ?? '')
-          .split(',')
-          .map((s) => parseInt(s.trim(), 10))
-          .filter((n) => !isNaN(n))
-      : [],
+    depends:
+      (tagMap.get('depends') ?? '')
+        ? (tagMap.get('depends') ?? '')
+            .split(',')
+            .map((s) => parseInt(s.trim(), 10))
+            .filter((n) => !isNaN(n))
+        : [],
     extraLines,
   };
 }

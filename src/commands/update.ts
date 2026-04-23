@@ -75,6 +75,8 @@ export function createUpdateCommand(): Command {
         task.status = opts.status.toLowerCase() as Status;
       }
 
+      task.updated = new Date().toISOString().slice(0, 10);
+
       await writeTasksFile(filePath, serializeTaskFile(taskFile));
 
       if (format === 'json') {

@@ -20,6 +20,7 @@ export function formatTaskDetail(task: Task): string {
     `  Type:        ${task.type}`,
     `  Status:      ${task.status}`,
     `  Created:     ${task.created}`,
+    `  Updated:     ${task.updated}`,
   ].join('\n');
 }
 

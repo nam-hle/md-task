@@ -15,6 +15,7 @@ export interface Task {
   type: TaskType;
   status: Status;
   created: string;
+  updated: string;
   extraLines: string[];
 }
 
@@ -61,6 +62,7 @@ export function applyDefaults(input: TaskInput, id: number): Task {
       ? ((input.status ?? '').toLowerCase() as Status)
       : 'todo',
     created: today(),
+    updated: today(),
     extraLines: [],
   };
 }

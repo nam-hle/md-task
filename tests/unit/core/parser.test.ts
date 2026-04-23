@@ -31,6 +31,7 @@ describe('parseTaskFile', () => {
     expect(task1.scope).toBe('backend');
     expect(task1.status).toBe('todo');
     expect(task1.created).toBe('2026-04-23');
+    expect(task1.updated).toBe('2026-04-23');
   });
 
   it('parses empty file', () => {

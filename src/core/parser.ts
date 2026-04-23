@@ -52,7 +52,7 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
     // Try as tag line first (contains key:value pattern with comma separation)
     const potentialTags = parseTagLine(line);
     const hasKnownTag = [...potentialTags.keys()].some((k) =>
-      ['type', 'priority', 'scope', 'status', 'created'].includes(k),
+      ['type', 'priority', 'scope', 'status', 'created', 'updated'].includes(k),
     );
 
     if (hasKnownTag && potentialTags.size > 0) {
@@ -90,6 +90,8 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
     type: isValidType(typeRaw) ? (typeRaw.toLowerCase() as TaskType) : 'task',
     status: isValidStatus(statusRaw) ? (statusRaw.toLowerCase() as Status) : 'todo',
     created: tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
+    updated:
+      tagMap.get('updated') ?? tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
     extraLines,
   };
 }
@@ -142,6 +144,7 @@ function taskToBlock(task: Task): string {
     `scope:${task.scope}`,
     `status:${task.status}`,
     `created:${task.created}`,
+    `updated:${task.updated}`,
   ];
   lines.push(tags.join(', '));
   for (const extra of task.extraLines) {

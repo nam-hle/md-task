@@ -3,7 +3,7 @@ import { parseTaskFile } from '../core/parser.js';
 import type { Task, Priority } from '../core/task.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, formatTaskDetail } from '../shared/output.js';
-import { fileNotFound } from '../shared/errors.js';
+import { fileNotFound, EXIT_NOT_FOUND } from '../shared/errors.js';
 
 const PRIORITY_ORDER: Record<Priority, number> = {
   critical: 0,
@@ -68,6 +68,7 @@ export function createNextCommand(): Command {
         } else {
           console.log('No actionable tasks.');
         }
+        process.exitCode = EXIT_NOT_FOUND;
         return;
       }
 

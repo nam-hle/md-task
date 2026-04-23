@@ -20,7 +20,7 @@ describe('next command', () => {
   let file: string;
 
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'mtask-test-'));
+    dir = await mkdtemp(join(tmpdir(), 'md-task-test-'));
     file = join(dir, 'TASKS.md');
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});

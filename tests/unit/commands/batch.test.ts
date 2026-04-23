@@ -29,7 +29,7 @@ describe('batch command', () => {
   let originalStdin: typeof process.stdin;
 
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'mtask-test-'));
+    dir = await mkdtemp(join(tmpdir(), 'md-task-test-'));
     file = join(dir, 'TASKS.md');
     originalStdin = process.stdin;
     vi.spyOn(console, 'log').mockImplementation(() => {});

@@ -20,7 +20,7 @@ describe('view command', () => {
   let file: string;
 
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'mtask-test-'));
+    dir = await mkdtemp(join(tmpdir(), 'md-task-test-'));
     file = join(dir, 'TASKS.md');
     const fixture = readFileSync(join(FIXTURES, 'valid.md'), 'utf-8');
     await writeFile(file, fixture, 'utf-8');

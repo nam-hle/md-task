@@ -9,6 +9,7 @@ import { createDoneCommand } from './commands/done.js';
 import { createStartCommand } from './commands/start.js';
 import { createNextCommand } from './commands/next.js';
 import { createSearchCommand } from './commands/search.js';
+import { createStatsCommand } from './commands/stats.js';
 import { MtaskError } from './shared/errors.js';
 
 const program = new Command();
@@ -25,6 +26,7 @@ program.addCommand(createDoneCommand());
 program.addCommand(createStartCommand());
 program.addCommand(createNextCommand());
 program.addCommand(createSearchCommand());
+program.addCommand(createStatsCommand());
 
 program.parseAsync(process.argv).catch((err: unknown) => {
   if (err instanceof MtaskError) {

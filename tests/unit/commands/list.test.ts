@@ -98,4 +98,45 @@ describe('list command', () => {
     const priorities = parsed.tasks.map((t: { priority: string }) => t.priority);
     expect(priorities[0]).toBe('high');
   });
+
+  it('filters by multiple statuses', async () => {
+    const program = buildProgram();
+    await program.parseAsync([
+      'node',
+      'test',
+      'list',
+      '--file',
+      file,
+      '--status',
+      'todo,done',
+      '--format',
+      'json',
+    ]);
+
+    const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    const parsed = JSON.parse(output);
+    expect(parsed.count).toBe(2);
+    const statuses = parsed.tasks.map((t: { status: string }) => t.status);
+    expect(statuses).toContain('todo');
+    expect(statuses).toContain('done');
+  });
+
+  it('filters by multiple scopes', async () => {
+    const program = buildProgram();
+    await program.parseAsync([
+      'node',
+      'test',
+      'list',
+      '--file',
+      file,
+      '--scope',
+      'backend,general',
+      '--format',
+      'json',
+    ]);
+
+    const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    const parsed = JSON.parse(output);
+    expect(parsed.count).toBe(3);
+  });
 });

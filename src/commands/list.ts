@@ -47,16 +47,20 @@ export function createListCommand(): Command {
       let tasks: Task[] = taskFile.tasks;
 
       if (opts.priority) {
-        tasks = tasks.filter((t) => t.priority === opts.priority.toLowerCase());
+        const values = (opts.priority as string).toLowerCase().split(',');
+        tasks = tasks.filter((t) => values.includes(t.priority));
       }
       if (opts.scope) {
-        tasks = tasks.filter((t) => t.scope === opts.scope);
+        const values = (opts.scope as string).split(',');
+        tasks = tasks.filter((t) => values.includes(t.scope));
       }
       if (opts.type) {
-        tasks = tasks.filter((t) => t.type === opts.type.toLowerCase());
+        const values = (opts.type as string).toLowerCase().split(',');
+        tasks = tasks.filter((t) => values.includes(t.type));
       }
       if (opts.status) {
-        tasks = tasks.filter((t) => t.status === opts.status.toLowerCase());
+        const values = (opts.status as string).toLowerCase().split(',');
+        tasks = tasks.filter((t) => values.includes(t.status));
       }
 
       if (opts.sort) {

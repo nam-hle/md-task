@@ -7,6 +7,7 @@ import { createViewCommand } from './commands/view.js';
 import { createInitCommand } from './commands/init.js';
 import { createDoneCommand } from './commands/done.js';
 import { createStartCommand } from './commands/start.js';
+import { createNextCommand } from './commands/next.js';
 import { MtaskError } from './shared/errors.js';
 
 const program = new Command();
@@ -21,6 +22,7 @@ program.addCommand(createViewCommand());
 program.addCommand(createInitCommand());
 program.addCommand(createDoneCommand());
 program.addCommand(createStartCommand());
+program.addCommand(createNextCommand());
 
 program.parseAsync(process.argv).catch((err: unknown) => {
   if (err instanceof MtaskError) {

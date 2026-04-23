@@ -10,6 +10,7 @@ export function createInitCommand(): Command {
     .description('Initialize an empty tasks file')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
+    .option('-q, --quiet', 'Minimal output')
     .action(async (opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
@@ -20,7 +21,9 @@ export function createInitCommand(): Command {
 
       await writeTasksFile(filePath, INITIAL_CONTENT);
 
-      if (format === 'json') {
+      if (opts.quiet) {
+        console.log(filePath);
+      } else if (format === 'json') {
         console.log(formatJson({ created: filePath }));
       } else {
         console.log(`Created ${filePath}`);

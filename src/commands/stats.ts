@@ -10,6 +10,7 @@ export function createStatsCommand(): Command {
     .description('Show task count summary')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
+    .option('-q, --quiet', 'Minimal output (just total count)')
     .action(async (opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
@@ -43,7 +44,9 @@ export function createStatsCommand(): Command {
 
       const stats = { total: tasks.length, byStatus, byPriority, blocked };
 
-      if (format === 'json') {
+      if (opts.quiet) {
+        console.log(String(stats.total));
+      } else if (format === 'json') {
         console.log(formatJson(stats));
       } else {
         const parts: string[] = [`Total: ${stats.total}`];

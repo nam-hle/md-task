@@ -90,6 +90,14 @@ describe('add command', () => {
     expect(content).toContain('depends:1,2');
   });
 
+  it('outputs only task ID in quiet mode', async () => {
+    const program = buildProgram();
+    await program.parseAsync(['node', 'test', 'add', '--file', file, '--quiet', 'Quiet task']);
+
+    const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    expect(output).toBe('1');
+  });
+
   it('outputs JSON when --format json', async () => {
     const program = buildProgram();
     await program.parseAsync([

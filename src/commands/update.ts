@@ -25,6 +25,7 @@ export function createUpdateCommand(): Command {
     .option('--note <text>', 'Append a note to the task')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
+    .option('-q, --quiet', 'Minimal output (just task ID)')
     .action(async (idStr: string, opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
@@ -102,7 +103,9 @@ export function createUpdateCommand(): Command {
 
       await writeTasksFile(filePath, serializeTaskFile(taskFile));
 
-      if (format === 'json') {
+      if (opts.quiet) {
+        console.log(String(task.id));
+      } else if (format === 'json') {
         console.log(formatJson({ task }));
       } else {
         console.log(`Updated task ${task.id}: ${task.description}`);

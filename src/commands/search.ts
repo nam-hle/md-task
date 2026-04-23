@@ -10,6 +10,7 @@ export function createSearchCommand(): Command {
     .argument('<query>', 'Search query (case-insensitive)')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
+    .option('-q, --quiet', 'Minimal output (one ID per line)')
     .action(async (query: string, opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
@@ -27,7 +28,9 @@ export function createSearchCommand(): Command {
         return t.extraLines.some((line) => line.toLowerCase().includes(lowerQuery));
       });
 
-      if (format === 'json') {
+      if (opts.quiet) {
+        console.log(matches.map((t) => String(t.id)).join('\n'));
+      } else if (format === 'json') {
         console.log(formatJson({ tasks: matches, count: matches.length }));
       } else {
         console.log(formatTaskList(matches));

@@ -27,6 +27,7 @@ export function createNextCommand(): Command {
     .option('--type <value>', 'Filter by type')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
+    .option('-q, --quiet', 'Minimal output (just task ID)')
     .action(async (opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
@@ -60,7 +61,9 @@ export function createNextCommand(): Command {
       const next = candidates[0];
 
       if (!next) {
-        if (format === 'json') {
+        if (opts.quiet) {
+          // empty output
+        } else if (format === 'json') {
           console.log(formatJson({ task: null }));
         } else {
           console.log('No actionable tasks.');
@@ -68,7 +71,9 @@ export function createNextCommand(): Command {
         return;
       }
 
-      if (format === 'json') {
+      if (opts.quiet) {
+        console.log(String(next.id));
+      } else if (format === 'json') {
         console.log(formatJson({ task: next }));
       } else {
         console.log(formatTaskDetail(next));

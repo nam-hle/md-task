@@ -29,6 +29,7 @@ export function createListCommand(): Command {
     .option('--sort <field>', 'Sort by: priority/created/updated/status/id')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
+    .option('-q, --quiet', 'Minimal output (one ID per line)')
     .action(async (opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
@@ -83,7 +84,9 @@ export function createListCommand(): Command {
         });
       }
 
-      if (format === 'json') {
+      if (opts.quiet) {
+        console.log(tasks.map((t) => String(t.id)).join('\n'));
+      } else if (format === 'json') {
         console.log(formatJson({ tasks, count: tasks.length }));
       } else {
         console.log(formatTaskList(tasks));

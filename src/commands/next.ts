@@ -1,16 +1,9 @@
 import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
-import type { Task, Priority } from '../core/task.js';
+import type { Task } from '../core/task.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, formatTaskDetail } from '../shared/output.js';
 import { fileNotFound, EXIT_NOT_FOUND } from '../shared/errors.js';
-
-const PRIORITY_ORDER: Record<Priority, number> = {
-  critical: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-};
 
 function isBlocked(task: Task, tasks: Task[]): boolean {
   if (task.depends.length === 0) return false;
@@ -38,10 +31,10 @@ export function createNextCommand(): Command {
 
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
+      const config = taskFile.config;
+      const terminal = config.fields.terminal;
 
-      let candidates = taskFile.tasks.filter(
-        (t) => t.status === 'todo' || t.status === 'in-progress',
-      );
+      let candidates = taskFile.tasks.filter((t) => !terminal.includes(t.status));
 
       candidates = candidates.filter((t) => !isBlocked(t, taskFile.tasks));
 
@@ -52,10 +45,13 @@ export function createNextCommand(): Command {
         candidates = candidates.filter((t) => t.type === (opts.type as string).toLowerCase());
       }
 
+      const priorityOrder = Object.fromEntries(config.fields.priority.map((v, i) => [v, i]));
+      const statusOrder = Object.fromEntries(config.fields.status.map((v, i) => [v, i]));
+
       candidates.sort((a, b) => {
-        if (a.status === 'in-progress' && b.status !== 'in-progress') return -1;
-        if (b.status === 'in-progress' && a.status !== 'in-progress') return 1;
-        return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+        const statusDiff = (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+        if (statusDiff !== 0) return statusDiff;
+        return (priorityOrder[a.priority] ?? 99) - (priorityOrder[b.priority] ?? 99);
       });
 
       const next = candidates[0];

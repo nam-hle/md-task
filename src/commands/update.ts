@@ -1,16 +1,9 @@
 import { Command } from 'commander';
 import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
-import {
-  isValidPriority,
-  isValidType,
-  isValidStatus,
-  type Priority,
-  type TaskType,
-  type Status,
-} from '../core/task.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
+import { isValidField } from '../core/config.js';
 
 export function createUpdateCommand(): Command {
   return new Command('update')
@@ -55,6 +48,7 @@ export function createUpdateCommand(): Command {
 
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
+      const config = taskFile.config;
       const task = taskFile.tasks.find((t) => t.id === id);
 
       if (!task) {
@@ -63,27 +57,36 @@ export function createUpdateCommand(): Command {
 
       if (opts.description) task.description = opts.description;
       if (opts.priority) {
-        if (!isValidPriority(opts.priority)) {
+        if (!isValidField(opts.priority, config.fields.priority)) {
           throw validationError(
-            `Invalid priority: ${opts.priority}. Use: critical, high, medium, low`,
+            `Invalid priority: ${opts.priority}. Use: ${config.fields.priority.join(', ')}`,
           );
         }
-        task.priority = opts.priority.toLowerCase() as Priority;
+        task.priority = (opts.priority as string).toLowerCase();
       }
-      if (opts.scope) task.scope = opts.scope;
-      if (opts.type) {
-        if (!isValidType(opts.type)) {
-          throw validationError(`Invalid type: ${opts.type}. Use: feature, bug, task, chore`);
+      if (opts.scope) {
+        if (!isValidField(opts.scope, config.fields.scope)) {
+          throw validationError(
+            `Invalid scope: ${opts.scope}. Use: ${config.fields.scope?.join(', ') ?? '(any)'}`,
+          );
         }
-        task.type = opts.type.toLowerCase() as TaskType;
+        task.scope = opts.scope;
+      }
+      if (opts.type) {
+        if (!isValidField(opts.type, config.fields.type)) {
+          throw validationError(
+            `Invalid type: ${opts.type}. Use: ${config.fields.type.join(', ')}`,
+          );
+        }
+        task.type = (opts.type as string).toLowerCase();
       }
       if (opts.status) {
-        if (!isValidStatus(opts.status)) {
+        if (!isValidField(opts.status, config.fields.status)) {
           throw validationError(
-            `Invalid status: ${opts.status}. Use: todo, in-progress, done, cancelled`,
+            `Invalid status: ${opts.status}. Use: ${config.fields.status.join(', ')}`,
           );
         }
-        task.status = opts.status.toLowerCase() as Status;
+        task.status = (opts.status as string).toLowerCase();
       }
 
       if (opts.note) {

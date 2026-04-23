@@ -1,20 +1,6 @@
 import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
 import type { Task } from '../core/task.js';
-
-const PRIORITY_ORDER: Record<string, number> = {
-  critical: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-};
-
-const STATUS_ORDER: Record<string, number> = {
-  'in-progress': 0,
-  todo: 1,
-  done: 2,
-  cancelled: 3,
-};
 import { readTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, formatTaskList } from '../shared/output.js';
 import { fileNotFound } from '../shared/errors.js';
@@ -40,6 +26,7 @@ export function createListCommand(): Command {
 
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
+      const config = taskFile.config;
 
       for (const warning of taskFile.warnings) {
         console.error(`warning: ${warning}`);
@@ -66,12 +53,14 @@ export function createListCommand(): Command {
 
       if (opts.sort) {
         const field = opts.sort as string;
+        const priorityOrder = Object.fromEntries(config.fields.priority.map((v, i) => [v, i]));
+        const statusOrder = Object.fromEntries(config.fields.status.map((v, i) => [v, i]));
         tasks.sort((a, b) => {
           switch (field) {
             case 'priority':
-              return (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99);
+              return (priorityOrder[a.priority] ?? 99) - (priorityOrder[b.priority] ?? 99);
             case 'status':
-              return (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
+              return (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
             case 'created':
               return a.created.localeCompare(b.created);
             case 'updated':

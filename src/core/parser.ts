@@ -1,20 +1,35 @@
+import type { Task, TaskFile } from './task.js';
 import {
-  type Task,
-  type TaskFile,
-  isValidPriority,
-  isValidType,
-  isValidStatus,
-  type Priority,
-  type TaskType,
-  type Status,
-} from './task.js';
+  type TaskConfig,
+  DEFAULT_CONFIG,
+  parseConfig,
+  validateConfig,
+  formatId,
+  parseIdFromHeading,
+  isValidField,
+  serializeConfig,
+} from './config.js';
 
-const HEADING_RE = /^###\s+Task\s+(\d+)\s*$/;
 const TAG_RE = /^(\w[\w-]*):(.*)/;
 
 interface RawBlock {
   id: number;
   lines: string[];
+}
+
+function extractFrontmatter(content: string): { yaml: string; body: string } {
+  if (!content.startsWith('---')) {
+    return { yaml: '', body: content };
+  }
+
+  const endIndex = content.indexOf('\n---', 3);
+  if (endIndex === -1) {
+    return { yaml: '', body: content };
+  }
+
+  const yaml = content.slice(4, endIndex);
+  const body = content.slice(endIndex + 4);
+  return { yaml, body };
 }
 
 function parseTagLine(line: string): Map<string, string> {
@@ -30,11 +45,11 @@ function parseTagLine(line: string): Map<string, string> {
   return tags;
 }
 
-function blockToTask(block: RawBlock, warnings: string[]): Task | null {
+function blockToTask(block: RawBlock, config: TaskConfig, warnings: string[]): Task | null {
   const { id, lines } = block;
 
   if (lines.length === 0) {
-    warnings.push(`Task ${id}: empty block, skipping`);
+    warnings.push(`${formatId(id, config)}: empty block, skipping`);
     return null;
   }
 
@@ -44,16 +59,15 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
   let descriptionFound = false;
   let tagsFound = false;
 
+  const knownTags = ['type', 'priority', 'scope', 'status', 'created', 'updated', 'depends'];
+
   for (const line of lines) {
     if (!line.trim()) {
       continue;
     }
 
-    // Try as tag line first (contains key:value pattern with comma separation)
     const potentialTags = parseTagLine(line);
-    const hasKnownTag = [...potentialTags.keys()].some((k) =>
-      ['type', 'priority', 'scope', 'status', 'created', 'updated', 'depends'].includes(k),
-    );
+    const hasKnownTag = [...potentialTags.keys()].some((k) => knownTags.includes(k));
 
     if (hasKnownTag && potentialTags.size > 0) {
       for (const [key, value] of potentialTags) {
@@ -74,51 +88,68 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
   }
 
   if (!description) {
-    warnings.push(`Task ${id}: no description found, skipping`);
+    warnings.push(`${formatId(id, config)}: no description found, skipping`);
     return null;
   }
 
   const priorityRaw = tagMap.get('priority') ?? '';
   const typeRaw = tagMap.get('type') ?? '';
   const statusRaw = tagMap.get('status') ?? '';
+  const scopeRaw = tagMap.get('scope') ?? '';
+  const dependsStr = tagMap.get('depends') ?? '';
 
   return {
     id,
     description,
-    priority: isValidPriority(priorityRaw) ? (priorityRaw.toLowerCase() as Priority) : 'medium',
-    scope: tagMap.get('scope') ?? 'general',
-    type: isValidType(typeRaw) ? (typeRaw.toLowerCase() as TaskType) : 'task',
-    status: isValidStatus(statusRaw) ? (statusRaw.toLowerCase() as Status) : 'todo',
+    priority: isValidField(priorityRaw, config.fields.priority)
+      ? priorityRaw.toLowerCase()
+      : config.defaults.priority,
+    scope: scopeRaw
+      ? isValidField(scopeRaw, config.fields.scope)
+        ? scopeRaw
+        : config.defaults.scope
+      : config.defaults.scope,
+    type: isValidField(typeRaw, config.fields.type) ? typeRaw.toLowerCase() : config.defaults.type,
+    status: isValidField(statusRaw, config.fields.status)
+      ? statusRaw.toLowerCase()
+      : config.defaults.status,
     created: tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
     updated:
       tagMap.get('updated') ?? tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
-    depends:
-      (tagMap.get('depends') ?? '')
-        ? (tagMap.get('depends') ?? '')
-            .split(',')
-            .map((s) => parseInt(s.trim(), 10))
-            .filter((n) => !isNaN(n))
-        : [],
+    depends: dependsStr
+      ? dependsStr
+          .split(',')
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => !isNaN(n))
+      : [],
     extraLines,
   };
 }
 
 export function parseTaskFile(content: string): TaskFile {
-  const lines = content.split('\n');
+  const { yaml, body } = extractFrontmatter(content);
+  const config = yaml ? parseConfig(yaml) : { ...DEFAULT_CONFIG };
+
+  const configErrors = validateConfig(config);
+  const warnings: string[] = [];
+  for (const err of configErrors) {
+    warnings.push(`config: ${err}`);
+  }
+
+  const lines = body.split('\n');
   const header: string[] = [];
   const blocks: RawBlock[] = [];
-  const warnings: string[] = [];
 
   let currentBlock: RawBlock | null = null;
 
   for (const line of lines) {
-    const headingMatch = HEADING_RE.exec(line);
+    const id = parseIdFromHeading(line, config);
 
-    if (headingMatch) {
+    if (id !== null) {
       if (currentBlock) {
         blocks.push(currentBlock);
       }
-      currentBlock = { id: parseInt(headingMatch[1] ?? '0', 10), lines: [] };
+      currentBlock = { id, lines: [] };
     } else if (currentBlock) {
       currentBlock.lines.push(line);
     } else {
@@ -132,18 +163,18 @@ export function parseTaskFile(content: string): TaskFile {
 
   const tasks: Task[] = [];
   for (const block of blocks) {
-    const task = blockToTask(block, warnings);
+    const task = blockToTask(block, config, warnings);
     if (task) {
       tasks.push(task);
     }
   }
 
-  return { header, tasks, warnings };
+  return { config, header, tasks, warnings };
 }
 
-function taskToBlock(task: Task): string {
+function taskToBlock(task: Task, config: TaskConfig): string {
   const lines: string[] = [];
-  lines.push(`### Task ${task.id}`);
+  lines.push(`### ${formatId(task.id, config)}`);
   lines.push(task.description);
   const tags = [
     `type:${task.type}`,
@@ -166,10 +197,12 @@ function taskToBlock(task: Task): string {
 export function serializeTaskFile(taskFile: TaskFile): string {
   const parts: string[] = [];
 
+  parts.push(serializeConfig(taskFile.config));
+
   parts.push(taskFile.header.join('\n'));
 
   for (const task of taskFile.tasks) {
-    parts.push(taskToBlock(task));
+    parts.push(taskToBlock(task, taskFile.config));
   }
 
   let result = parts.join('\n\n');

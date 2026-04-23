@@ -3,9 +3,9 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import type { Status } from '../core/task.js';
+import { isValidField } from '../core/config.js';
 
-export function createStatusShortcut(name: string, targetStatus: Status): Command {
+export function createStatusShortcut(name: string, targetStatus: string): Command {
   return new Command(name)
     .description(`Mark task as ${targetStatus}`)
     .argument('<id>', 'Task ID')
@@ -27,6 +27,14 @@ export function createStatusShortcut(name: string, targetStatus: Status): Comman
 
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
+      const config = taskFile.config;
+
+      if (!isValidField(targetStatus, config.fields.status)) {
+        throw validationError(
+          `Status "${targetStatus}" not configured. Use: ${config.fields.status.join(', ')}`,
+        );
+      }
+
       const task = taskFile.tasks.find((t) => t.id === id);
 
       if (!task) {

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-md-task — CLI for managing tasks as markdown files, optimized for AI agent token usage. Tasks stored in `TASKS.md` (default) as markdown with `### Task N` headings and comma-separated tag lines.
+md-task — CLI for managing tasks as markdown files, optimized for AI agent token usage. Tasks stored in `TASKS.md` (default) as markdown with YAML frontmatter (schema config) + `### {prefix}{sep}{id}` headings and comma-separated tag lines.
 
 ## Commands
 
@@ -24,8 +24,9 @@ pnpm format:check   # Prettier --check (CI-friendly)
 src/
   index.ts              # CLI entry — commander program, registers all subcommands
   core/
-    task.ts             # Task type with depends/updated fields, validation, defaults
-    parser.ts           # Markdown ↔ Task[] (parseTaskFile / serializeTaskFile)
+    config.ts           # TaskConfig type, YAML parsing, validation, ID formatting
+    task.ts             # Task type, config-aware validation and defaults
+    parser.ts           # Frontmatter extraction, markdown ↔ Task[] with config
     id.ts               # Auto-increment ID from existing tasks
   commands/
     add.ts              # Add new task (--depends-on, --quiet)
@@ -33,10 +34,10 @@ src/
     update.ts           # Update task fields (--note, --depends-on, --quiet)
     remove.ts           # Remove by ID
     view.ts             # View single task
-    init.ts             # Create empty TASKS.md
+    init.ts             # Create TASKS.md with frontmatter template
     done.ts             # Shortcut: mark task done
     start.ts            # Shortcut: mark task in-progress
-    next.ts             # Highest-priority actionable task (skips blocked)
+    next.ts             # Highest-priority actionable task (skips blocked + terminal)
     search.ts           # Case-insensitive keyword search
     stats.ts            # Summary counts by status/priority/blocked
     batch.ts            # Bulk ops via JSON stdin
@@ -44,22 +45,24 @@ src/
   shared/
     file.ts             # fs read/write/exists wrappers
     output.ts           # Tab-delimited compact + detail formatters, JSON output
-    errors.ts           # MtaskError with exit codes (0=ok, 1=error, 2=not-found)
+    errors.ts           # MdTaskError with exit codes (0=ok, 1=error, 2=not-found)
 ```
 
-**Data flow**: All commands follow the same pattern — read `TASKS.md` → `parseTaskFile()` → mutate `TaskFile` → `serializeTaskFile()` → write back. Parser splits on `### Task N` headings; each block has a description line, a comma-separated tag line (`type:feature, priority:high, scope:api, status:todo, created:2025-01-01, updated:2025-01-01, depends:3,5`), and optional extra lines (notes prefixed with `>`).
+**Schema config**: YAML frontmatter in `TASKS.md` defines customizable ID prefix/separator, allowed values for priority/type/status/scope fields, terminal statuses, and defaults. Parsed by `config.ts`, passed through `TaskFile.config` to all consumers. When absent, hardcoded defaults apply.
+
+**Data flow**: All commands follow the same pattern — read `TASKS.md` → `parseTaskFile()` (extracts frontmatter → config, then parses task blocks) → mutate `TaskFile` → `serializeTaskFile()` (writes frontmatter + tasks) → write back.
 
 **Output modes**: Every command supports `--format text|json` and `-q/--quiet` (minimal machine output — just IDs).
 
 **File path**: Every command accepts `--file <path>` defaulting to `TASKS.md`.
 
-**Task dependencies**: Tasks can declare `--depends-on 3,5`. The `next` command skips blocked tasks (deps not done). `stats` reports blocked count.
+**Task dependencies**: Tasks can declare `--depends-on 3,5`. `next` skips blocked tasks. `stats` reports blocked count.
 
 **Batch operations**: `batch` reads JSON array from stdin, supports add/update/remove/done/start actions, reports per-action success/failure.
 
 ## Testing
 
-Tests use vitest with globals enabled. All tests are in `tests/unit/` mirroring src structure. Tests use temp directories via `mkdtemp` for file I/O — no mocking of the filesystem. Batch tests mock `process.stdin` with `Readable` stream.
+Tests use vitest with globals enabled. All tests are in `tests/unit/` mirroring src structure. Tests use temp directories via `mkdtemp` for file I/O — no mocking of the filesystem. Batch tests mock `process.stdin` with `Readable` stream. Fixtures include frontmatter.
 
 ## CI
 

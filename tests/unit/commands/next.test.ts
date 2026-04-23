@@ -31,7 +31,7 @@ describe('next command', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('prefers in-progress over todo', async () => {
+  it('returns task by status order then priority', async () => {
     const fixture = readFileSync(join(FIXTURES, 'valid.md'), 'utf-8');
     await writeFile(file, fixture, 'utf-8');
 
@@ -40,8 +40,10 @@ describe('next command', () => {
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     const parsed = JSON.parse(output);
-    expect(parsed.task.status).toBe('in-progress');
-    expect(parsed.task.description).toBe('Add caching layer');
+    // Fixture status order: [todo, in-progress, done, cancelled]
+    // Task 1 is todo (high), Task 2 is in-progress (medium) → todo comes first
+    expect(parsed.task.status).toBe('todo');
+    expect(parsed.task.description).toBe('Fix login timeout');
   });
 
   it('filters by scope', async () => {

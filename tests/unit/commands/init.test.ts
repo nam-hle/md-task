@@ -33,7 +33,8 @@ describe('init command', () => {
     await program.parseAsync(['node', 'test', 'init', '--file', file]);
 
     const content = await readFile(file, 'utf-8');
-    expect(content).toBe('# Tasks\n');
+    expect(content).toContain('---');
+    expect(content).toContain('# Tasks');
   });
 
   it('outputs JSON when --format json', async () => {

@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
-import { STATUSES, PRIORITIES } from '../core/task.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { fileNotFound } from '../shared/errors.js';
@@ -21,15 +20,16 @@ export function createStatsCommand(): Command {
 
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
+      const config = taskFile.config;
       const tasks = taskFile.tasks;
 
       const byStatus: Record<string, number> = {};
-      for (const s of STATUSES) {
+      for (const s of config.fields.status) {
         byStatus[s] = tasks.filter((t) => t.status === s).length;
       }
 
       const byPriority: Record<string, number> = {};
-      for (const p of PRIORITIES) {
+      for (const p of config.fields.priority) {
         byPriority[p] = tasks.filter((t) => t.priority === p).length;
       }
 
@@ -38,7 +38,7 @@ export function createStatsCommand(): Command {
           t.depends.length > 0 &&
           t.depends.some((depId) => {
             const dep = tasks.find((d) => d.id === depId);
-            return !dep || dep.status !== 'done';
+            return !dep || !config.fields.terminal.includes(dep.status);
           }),
       ).length;
 

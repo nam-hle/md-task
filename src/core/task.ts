@@ -1,19 +1,12 @@
-export const PRIORITIES = ['critical', 'high', 'medium', 'low'] as const;
-export type Priority = (typeof PRIORITIES)[number];
-
-export const TYPES = ['feature', 'bug', 'task', 'chore'] as const;
-export type TaskType = (typeof TYPES)[number];
-
-export const STATUSES = ['todo', 'in-progress', 'done', 'cancelled'] as const;
-export type Status = (typeof STATUSES)[number];
+import { type TaskConfig, DEFAULT_CONFIG, isValidField } from './config.js';
 
 export interface Task {
   id: number;
   description: string;
-  priority: Priority;
+  priority: string;
   scope: string;
-  type: TaskType;
-  status: Status;
+  type: string;
+  status: string;
   created: string;
   updated: string;
   depends: number[];
@@ -21,6 +14,7 @@ export interface Task {
 }
 
 export interface TaskFile {
+  config: TaskConfig;
   header: string[];
   tasks: Task[];
   warnings: string[];
@@ -39,30 +33,39 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function isValidPriority(value: string): value is Priority {
-  return PRIORITIES.includes(value.toLowerCase() as Priority);
-}
+export function applyDefaults(
+  input: TaskInput,
+  id: number,
+  config: TaskConfig = DEFAULT_CONFIG,
+): Task {
+  const priority =
+    input.priority && isValidField(input.priority, config.fields.priority)
+      ? input.priority.toLowerCase()
+      : config.defaults.priority;
 
-export function isValidType(value: string): value is TaskType {
-  return TYPES.includes(value.toLowerCase() as TaskType);
-}
+  const type =
+    input.type && isValidField(input.type, config.fields.type)
+      ? input.type.toLowerCase()
+      : config.defaults.type;
 
-export function isValidStatus(value: string): value is Status {
-  return STATUSES.includes(value.toLowerCase() as Status);
-}
+  const status =
+    input.status && isValidField(input.status, config.fields.status)
+      ? input.status.toLowerCase()
+      : config.defaults.status;
 
-export function applyDefaults(input: TaskInput, id: number): Task {
+  const scope = input.scope
+    ? isValidField(input.scope, config.fields.scope)
+      ? input.scope
+      : config.defaults.scope
+    : config.defaults.scope;
+
   return {
     id,
     description: input.description,
-    priority: isValidPriority(input.priority ?? '')
-      ? ((input.priority ?? '').toLowerCase() as Priority)
-      : 'medium',
-    scope: input.scope ?? 'general',
-    type: isValidType(input.type ?? '') ? ((input.type ?? '').toLowerCase() as TaskType) : 'task',
-    status: isValidStatus(input.status ?? '')
-      ? ((input.status ?? '').toLowerCase() as Status)
-      : 'todo',
+    priority,
+    scope,
+    type,
+    status,
     created: today(),
     updated: today(),
     depends: input.depends

@@ -122,7 +122,8 @@ describe('serializeTaskFile', () => {
     const parsed = parseTaskFile(content);
     const serialized = serializeTaskFile(parsed);
 
-    expect(serialized).toMatch(/^# Tasks/);
+    expect(serialized).toMatch(/^---/);
+    expect(serialized).toContain('# Tasks');
   });
 
   it('ends with newline', () => {

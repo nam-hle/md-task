@@ -10,7 +10,7 @@ Add YAML frontmatter to `TASKS.md` that lets users customize task ID format, all
 ---
 id:
   prefix: TASK
-  separator: "-"
+  separator: '-'
 fields:
   priority: [critical, high, medium, low]
   type: [feature, bug, task, chore]
@@ -157,7 +157,7 @@ When `terminal` not specified, default to `["done", "cancelled"]`. `next` skips 
 ---
 id:
   prefix: Task
-  separator: " "
+  separator: ' '
 fields:
   priority: [critical, high, medium, low]
   type: [feature, bug, task, chore]
@@ -169,6 +169,7 @@ defaults:
   status: todo
   scope: general
 ---
+
 # Tasks
 
 ### Task 1

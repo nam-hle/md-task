@@ -1,18 +1,10 @@
 import { Command } from 'commander';
 import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
-import {
-  applyDefaults,
-  isValidPriority,
-  isValidType,
-  isValidStatus,
-  type TaskInput,
-  type Priority,
-  type TaskType,
-  type Status,
-} from '../core/task.js';
+import { applyDefaults, type TaskInput } from '../core/task.js';
 import { nextId } from '../core/id.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
+import { isValidField } from '../core/config.js';
 
 interface BatchAction {
   action: 'add' | 'update' | 'remove' | 'done' | 'start';
@@ -34,8 +26,6 @@ interface BatchResult {
   error?: string;
 }
 
-const EMPTY_FILE = '# Tasks\n';
-
 export function createBatchCommand(): Command {
   return new Command('batch')
     .description('Execute multiple task operations from JSON stdin')
@@ -50,12 +40,13 @@ export function createBatchCommand(): Command {
       const rawInput = Buffer.concat(chunks).toString('utf-8').trim();
       const actions: BatchAction[] = JSON.parse(rawInput);
 
-      let content = EMPTY_FILE;
+      let content = '';
       if (await fileExists(filePath)) {
         content = await readTasksFile(filePath);
       }
 
-      const taskFile = parseTaskFile(content);
+      const taskFile = content ? parseTaskFile(content) : parseTaskFile('---\n---\n# Tasks\n');
+      const config = taskFile.config;
       const results: BatchResult[] = [];
 
       for (const [i, act] of actions.entries()) {
@@ -72,7 +63,7 @@ export function createBatchCommand(): Command {
                 depends: act.dependsOn,
               };
               const id = nextId(taskFile.tasks);
-              const task = applyDefaults(taskInput, id);
+              const task = applyDefaults(taskInput, id, config);
               taskFile.tasks.push(task);
               results.push({ index: i, action: 'add', ok: true, id });
               break;
@@ -82,15 +73,19 @@ export function createBatchCommand(): Command {
               const task = taskFile.tasks.find((t) => t.id === act.id);
               if (!task) throw new Error(`Task ${act.id} not found`);
               if (act.description) task.description = act.description;
-              if (act.priority && isValidPriority(act.priority)) {
-                task.priority = act.priority.toLowerCase() as Priority;
+              if (act.priority && isValidField(act.priority, config.fields.priority)) {
+                task.priority = act.priority.toLowerCase();
               }
-              if (act.scope) task.scope = act.scope;
-              if (act.type && isValidType(act.type)) {
-                task.type = act.type.toLowerCase() as TaskType;
+              if (act.scope) {
+                if (isValidField(act.scope, config.fields.scope)) {
+                  task.scope = act.scope;
+                }
               }
-              if (act.status && isValidStatus(act.status)) {
-                task.status = act.status.toLowerCase() as Status;
+              if (act.type && isValidField(act.type, config.fields.type)) {
+                task.type = act.type.toLowerCase();
+              }
+              if (act.status && isValidField(act.status, config.fields.status)) {
+                task.status = act.status.toLowerCase();
               }
               if (act.note) task.extraLines.push(`> ${act.note}`);
               task.updated = new Date().toISOString().slice(0, 10);

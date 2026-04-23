@@ -2,8 +2,7 @@ import { Command } from 'commander';
 import { writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { fileAlreadyExists } from '../shared/errors.js';
-
-const INITIAL_CONTENT = '# Tasks\n';
+import { DEFAULT_CONFIG, serializeConfig } from '../core/config.js';
 
 export function createInitCommand(): Command {
   return new Command('init')
@@ -19,7 +18,9 @@ export function createInitCommand(): Command {
         throw fileAlreadyExists(filePath);
       }
 
-      await writeTasksFile(filePath, INITIAL_CONTENT);
+      const content = serializeConfig(DEFAULT_CONFIG) + '\n\n# Tasks\n';
+
+      await writeTasksFile(filePath, content);
 
       if (opts.quiet) {
         console.log(filePath);

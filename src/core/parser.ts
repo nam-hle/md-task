@@ -19,7 +19,7 @@ interface RawBlock {
 
 function parseTagLine(line: string): Map<string, string> {
   const tags = new Map<string, string>();
-  const parts = line.split(',');
+  const parts = line.split(/, (?=\w[\w-]*:)/);
   for (const part of parts) {
     const trimmed = part.trim();
     const match = TAG_RE.exec(trimmed);
@@ -52,7 +52,7 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
     // Try as tag line first (contains key:value pattern with comma separation)
     const potentialTags = parseTagLine(line);
     const hasKnownTag = [...potentialTags.keys()].some((k) =>
-      ['type', 'priority', 'scope', 'status', 'created', 'updated'].includes(k),
+      ['type', 'priority', 'scope', 'status', 'created', 'updated', 'depends'].includes(k),
     );
 
     if (hasKnownTag && potentialTags.size > 0) {
@@ -92,6 +92,12 @@ function blockToTask(block: RawBlock, warnings: string[]): Task | null {
     created: tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
     updated:
       tagMap.get('updated') ?? tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
+    depends: (tagMap.get('depends') ?? '')
+      ? (tagMap.get('depends') ?? '')
+          .split(',')
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => !isNaN(n))
+      : [],
     extraLines,
   };
 }
@@ -146,6 +152,9 @@ function taskToBlock(task: Task): string {
     `created:${task.created}`,
     `updated:${task.updated}`,
   ];
+  if (task.depends.length > 0) {
+    tags.push(`depends:${task.depends.join(',')}`);
+  }
   lines.push(tags.join(', '));
   for (const extra of task.extraLines) {
     lines.push(extra);

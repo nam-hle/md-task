@@ -84,6 +84,23 @@ describe('parseTaskFile (lenient)', () => {
   });
 });
 
+describe('depends field', () => {
+  it('parses depends field', () => {
+    const content =
+      '# Tasks\n\n### Task 1\nFoo\ntype:task, priority:medium, scope:general, status:todo, created:2026-01-01, updated:2026-01-01, depends:2,3\n';
+    const result = parseTaskFile(content);
+    expect(result.tasks[0]!.depends).toEqual([2, 3]);
+  });
+
+  it('serializes depends field only when non-empty', () => {
+    const content =
+      '# Tasks\n\n### Task 1\nFoo\ntype:task, priority:medium, scope:general, status:todo, created:2026-01-01, updated:2026-01-01\n';
+    const parsed = parseTaskFile(content);
+    const serialized = serializeTaskFile(parsed);
+    expect(serialized).not.toContain('depends:');
+  });
+});
+
 describe('serializeTaskFile', () => {
   it('round-trips a valid file', () => {
     const content = readFixture('valid.md');

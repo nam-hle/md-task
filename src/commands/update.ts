@@ -21,6 +21,7 @@ export function createUpdateCommand(): Command {
     .option('--scope <value>', 'New scope')
     .option('--type <value>', 'New type')
     .option('--status <value>', 'New status')
+    .option('--depends-on <ids>', 'Comma-separated task IDs this depends on')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
     .action(async (idStr: string, opts) => {
@@ -32,7 +33,14 @@ export function createUpdateCommand(): Command {
         throw validationError(`Invalid task ID: ${idStr}`);
       }
 
-      if (!opts.description && !opts.priority && !opts.scope && !opts.type && !opts.status) {
+      if (
+        !opts.description &&
+        !opts.priority &&
+        !opts.scope &&
+        !opts.type &&
+        !opts.status &&
+        opts.dependsOn === undefined
+      ) {
         throw validationError(
           'No update options provided. Use --description, --priority, --scope, --type, or --status',
         );
@@ -73,6 +81,15 @@ export function createUpdateCommand(): Command {
           );
         }
         task.status = opts.status.toLowerCase() as Status;
+      }
+
+      if (opts.dependsOn !== undefined) {
+        task.depends = opts.dependsOn
+          ? (opts.dependsOn as string)
+              .split(',')
+              .map((s: string) => parseInt(s.trim(), 10))
+              .filter((n: number) => !isNaN(n))
+          : [];
       }
 
       task.updated = new Date().toISOString().slice(0, 10);

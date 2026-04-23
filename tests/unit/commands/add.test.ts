@@ -73,6 +73,23 @@ describe('add command', () => {
     expect(content).toContain('type:bug');
   });
 
+  it('adds task with dependencies', async () => {
+    const program = buildProgram();
+    await program.parseAsync([
+      'node',
+      'test',
+      'add',
+      '--file',
+      file,
+      '--depends-on',
+      '1,2',
+      'Dependent task',
+    ]);
+
+    const content = await readFile(file, 'utf-8');
+    expect(content).toContain('depends:1,2');
+  });
+
   it('outputs JSON when --format json', async () => {
     const program = buildProgram();
     await program.parseAsync([

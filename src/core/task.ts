@@ -16,6 +16,7 @@ export interface Task {
   status: Status;
   created: string;
   updated: string;
+  depends: number[];
   extraLines: string[];
 }
 
@@ -31,6 +32,7 @@ export interface TaskInput {
   scope?: string;
   type?: string;
   status?: string;
+  depends?: string;
 }
 
 function today(): string {
@@ -63,6 +65,12 @@ export function applyDefaults(input: TaskInput, id: number): Task {
       : 'todo',
     created: today(),
     updated: today(),
+    depends: input.depends
+      ? input.depends
+          .split(',')
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => !isNaN(n))
+      : [],
     extraLines: [],
   };
 }

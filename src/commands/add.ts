@@ -16,6 +16,7 @@ export function createAddCommand(): Command {
     .option('--scope <value>', 'Scope label', 'general')
     .option('--type <value>', 'Type: feature/bug/task/chore', 'task')
     .option('--status <value>', 'Status: todo/in-progress/done/cancelled', 'todo')
+    .option('--depends-on <ids>', 'Comma-separated task IDs this depends on')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
     .action(async (description: string, opts) => {
@@ -43,6 +44,7 @@ export function createAddCommand(): Command {
         scope: opts.scope,
         type: opts.type,
         status: opts.status,
+        depends: opts.dependsOn,
       };
 
       const id = nextId(taskFile.tasks);

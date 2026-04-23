@@ -1,0 +1,32 @@
+import { Command } from 'commander';
+import { createAddCommand } from './commands/add.js';
+import { createListCommand } from './commands/list.js';
+import { createUpdateCommand } from './commands/update.js';
+import { createRemoveCommand } from './commands/remove.js';
+import { createViewCommand } from './commands/view.js';
+import { createInitCommand } from './commands/init.js';
+import { MtaskError } from './shared/errors.js';
+
+const program = new Command();
+
+program
+  .name('mtask')
+  .description('CLI for managing tasks as markdown')
+  .version('0.1.0');
+
+program.addCommand(createAddCommand());
+program.addCommand(createListCommand());
+program.addCommand(createUpdateCommand());
+program.addCommand(createRemoveCommand());
+program.addCommand(createViewCommand());
+program.addCommand(createInitCommand());
+
+program.parseAsync(process.argv).catch((err: unknown) => {
+  if (err instanceof MtaskError) {
+    console.error(err.message);
+    process.exitCode = err.exitCode;
+  } else {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exitCode = 1;
+  }
+});

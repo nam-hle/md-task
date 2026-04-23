@@ -1,0 +1,171 @@
+import {
+  type Task,
+  type TaskFile,
+  isValidPriority,
+  isValidType,
+  isValidStatus,
+  type Priority,
+  type TaskType,
+  type Status,
+} from './task.js';
+
+const HEADING_RE = /^###\s+Task\s+(\d+)\s*$/;
+const TAG_RE = /^(\w[\w-]*):(.*)/;
+
+interface RawBlock {
+  id: number;
+  lines: string[];
+}
+
+function parseTagLine(line: string): Map<string, string> {
+  const tags = new Map<string, string>();
+  const parts = line.split(',');
+  for (const part of parts) {
+    const trimmed = part.trim();
+    const match = TAG_RE.exec(trimmed);
+    if (match) {
+      tags.set(match[1]!.toLowerCase(), match[2]!.trim());
+    }
+  }
+  return tags;
+}
+
+function blockToTask(block: RawBlock, warnings: string[]): Task | null {
+  const { id, lines } = block;
+
+  if (lines.length === 0) {
+    warnings.push(`Task ${id}: empty block, skipping`);
+    return null;
+  }
+
+  let description = '';
+  const tagMap = new Map<string, string>();
+  const extraLines: string[] = [];
+  let descriptionFound = false;
+  let tagsFound = false;
+
+  for (const line of lines) {
+    if (!line.trim()) {
+      continue;
+    }
+
+    // Try as tag line first (contains key:value pattern with comma separation)
+    const potentialTags = parseTagLine(line);
+    const hasKnownTag = [...potentialTags.keys()].some((k) =>
+      ['type', 'priority', 'scope', 'status', 'created'].includes(k),
+    );
+
+    if (hasKnownTag && potentialTags.size > 0) {
+      for (const [key, value] of potentialTags) {
+        tagMap.set(key, value);
+      }
+      tagsFound = true;
+    } else if (!descriptionFound && !tagsFound) {
+      description = line.trim();
+      descriptionFound = true;
+    } else {
+      extraLines.push(line);
+    }
+  }
+
+  if (!description && tagMap.has('description')) {
+    description = tagMap.get('description')!;
+    tagMap.delete('description');
+  }
+
+  if (!description) {
+    warnings.push(`Task ${id}: no description found, skipping`);
+    return null;
+  }
+
+  const priorityRaw = tagMap.get('priority') ?? '';
+  const typeRaw = tagMap.get('type') ?? '';
+  const statusRaw = tagMap.get('status') ?? '';
+
+  return {
+    id,
+    description,
+    priority: isValidPriority(priorityRaw)
+      ? (priorityRaw.toLowerCase() as Priority)
+      : 'medium',
+    scope: tagMap.get('scope') ?? 'general',
+    type: isValidType(typeRaw) ? (typeRaw.toLowerCase() as TaskType) : 'task',
+    status: isValidStatus(statusRaw)
+      ? (statusRaw.toLowerCase() as Status)
+      : 'todo',
+    created: tagMap.get('created') ?? new Date().toISOString().slice(0, 10),
+    extraLines,
+  };
+}
+
+export function parseTaskFile(content: string): TaskFile {
+  const lines = content.split('\n');
+  const header: string[] = [];
+  const blocks: RawBlock[] = [];
+  const warnings: string[] = [];
+
+  let currentBlock: RawBlock | null = null;
+
+  for (const line of lines) {
+    const headingMatch = HEADING_RE.exec(line);
+
+    if (headingMatch) {
+      if (currentBlock) {
+        blocks.push(currentBlock);
+      }
+      currentBlock = { id: parseInt(headingMatch[1]!, 10), lines: [] };
+    } else if (currentBlock) {
+      currentBlock.lines.push(line);
+    } else {
+      header.push(line);
+    }
+  }
+
+  if (currentBlock) {
+    blocks.push(currentBlock);
+  }
+
+  const tasks: Task[] = [];
+  for (const block of blocks) {
+    const task = blockToTask(block, warnings);
+    if (task) {
+      tasks.push(task);
+    }
+  }
+
+  return { header, tasks, warnings };
+}
+
+function taskToBlock(task: Task): string {
+  const lines: string[] = [];
+  lines.push(`### Task ${task.id}`);
+  lines.push(task.description);
+  const tags = [
+    `type:${task.type}`,
+    `priority:${task.priority}`,
+    `scope:${task.scope}`,
+    `status:${task.status}`,
+    `created:${task.created}`,
+  ];
+  lines.push(tags.join(', '));
+  for (const extra of task.extraLines) {
+    lines.push(extra);
+  }
+  return lines.join('\n');
+}
+
+export function serializeTaskFile(taskFile: TaskFile): string {
+  const parts: string[] = [];
+
+  parts.push(taskFile.header.join('\n'));
+
+  for (const task of taskFile.tasks) {
+    parts.push(taskToBlock(task));
+  }
+
+  let result = parts.join('\n\n');
+  if (!result.endsWith('\n')) {
+    result += '\n';
+  }
+  return result;
+}

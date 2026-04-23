@@ -1,6 +1,20 @@
 import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
 import type { Task } from '../core/task.js';
+
+const PRIORITY_ORDER: Record<string, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
+const STATUS_ORDER: Record<string, number> = {
+  'in-progress': 0,
+  todo: 1,
+  done: 2,
+  cancelled: 3,
+};
 import { readTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, formatTaskList } from '../shared/output.js';
 import { fileNotFound } from '../shared/errors.js';
@@ -12,6 +26,7 @@ export function createListCommand(): Command {
     .option('--scope <value>', 'Filter by scope')
     .option('--type <value>', 'Filter by type')
     .option('--status <value>', 'Filter by status')
+    .option('--sort <field>', 'Sort by: priority/created/updated/status/id')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
     .action(async (opts) => {
@@ -42,6 +57,26 @@ export function createListCommand(): Command {
       }
       if (opts.status) {
         tasks = tasks.filter((t) => t.status === opts.status.toLowerCase());
+      }
+
+      if (opts.sort) {
+        const field = opts.sort as string;
+        tasks.sort((a, b) => {
+          switch (field) {
+            case 'priority':
+              return (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99);
+            case 'status':
+              return (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
+            case 'created':
+              return a.created.localeCompare(b.created);
+            case 'updated':
+              return a.updated.localeCompare(b.updated);
+            case 'id':
+              return a.id - b.id;
+            default:
+              return 0;
+          }
+        });
       }
 
       if (format === 'json') {

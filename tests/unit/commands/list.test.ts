@@ -78,4 +78,24 @@ describe('list command', () => {
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     expect(output).toContain('No tasks found');
   });
+
+  it('sorts by priority', async () => {
+    const program = buildProgram();
+    await program.parseAsync([
+      'node',
+      'test',
+      'list',
+      '--file',
+      file,
+      '--sort',
+      'priority',
+      '--format',
+      'json',
+    ]);
+
+    const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+    const parsed = JSON.parse(output);
+    const priorities = parsed.tasks.map((t: { priority: string }) => t.priority);
+    expect(priorities[0]).toBe('high');
+  });
 });

@@ -4,7 +4,7 @@ import { applyDefaults, type TaskInput } from '../core/task.js';
 import { nextId } from '../core/id.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
-import { isValidField, normalizeField } from '../core/config.js';
+import { isValidField, normalizeField, isValidTransition } from '../core/config.js';
 
 interface BatchAction {
   action: 'add' | 'update' | 'remove' | 'done' | 'start';
@@ -85,6 +85,11 @@ export function createBatchCommand(): Command {
                 task.type = normalizeField(act.type, config.fields.type);
               }
               if (act.status && isValidField(act.status, config.fields.status)) {
+                if (!isValidTransition(task.status, act.status, config.transitions)) {
+                  throw new Error(
+                    `Cannot transition from "${task.status}" to "${act.status}"`,
+                  );
+                }
                 task.status = normalizeField(act.status, config.fields.status);
               }
               if (act.note) task.extraLines.push(`> ${act.note}`);
@@ -104,6 +109,11 @@ export function createBatchCommand(): Command {
               if (!act.id) throw new Error('id required');
               const task = taskFile.tasks.find((t) => t.id === act.id);
               if (!task) throw new Error(`Task ${act.id} not found`);
+              if (!isValidTransition(task.status, 'done', config.transitions)) {
+                throw new Error(
+                  `Cannot transition from "${task.status}" to "done"`,
+                );
+              }
               task.status = 'done';
               task.updated = new Date().toISOString().slice(0, 10);
               results.push({ index: i, action: 'done', ok: true, id: act.id });
@@ -113,6 +123,11 @@ export function createBatchCommand(): Command {
               if (!act.id) throw new Error('id required');
               const task = taskFile.tasks.find((t) => t.id === act.id);
               if (!task) throw new Error(`Task ${act.id} not found`);
+              if (!isValidTransition(task.status, 'in-progress', config.transitions)) {
+                throw new Error(
+                  `Cannot transition from "${task.status}" to "in-progress"`,
+                );
+              }
               task.status = 'in-progress';
               task.updated = new Date().toISOString().slice(0, 10);
               results.push({ index: i, action: 'start', ok: true, id: act.id });

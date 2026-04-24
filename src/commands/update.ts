@@ -3,7 +3,7 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import { isValidField, normalizeField } from '../core/config.js';
+import { isValidField, normalizeField, isValidTransition } from '../core/config.js';
 
 export function createUpdateCommand(): Command {
   return new Command('update')
@@ -16,6 +16,7 @@ export function createUpdateCommand(): Command {
     .option('--status <value>', 'New status')
     .option('--depends-on <ids>', 'Comma-separated task IDs this depends on')
     .option('--note <text>', 'Append a note to the task')
+    .option('--force', 'Bypass transition validation')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
     .option('-q, --quiet', 'Minimal output (just task ID)')
@@ -84,6 +85,12 @@ export function createUpdateCommand(): Command {
         if (!isValidField(opts.status, config.fields.status)) {
           throw validationError(
             `Invalid status: ${opts.status}. Use: ${config.fields.status.join(', ')}`,
+          );
+        }
+        if (!opts.force && !isValidTransition(task.status, opts.status, config.transitions)) {
+          const allowed = config.transitions?.[task.status] ?? [];
+          throw validationError(
+            `Cannot transition from "${task.status}" to "${opts.status}". Allowed: ${allowed.join(', ') || '(none)'}`,
           );
         }
         task.status = normalizeField(opts.status as string, config.fields.status);

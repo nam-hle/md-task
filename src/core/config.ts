@@ -14,6 +14,7 @@ export interface TaskConfig {
     scope: string[] | null;
     terminal: string[];
   };
+  transitions: Record<string, string[]> | null;
   defaults: {
     priority: string;
     type: string;
@@ -31,6 +32,7 @@ export const DEFAULT_CONFIG: TaskConfig = {
     scope: null,
     terminal: ['done', 'cancelled'],
   },
+  transitions: null,
   defaults: {
     priority: 'medium',
     type: 'task',
@@ -45,6 +47,7 @@ export function parseConfig(yamlStr: string): TaskConfig {
 
   const rawId = raw.id as Record<string, string> | undefined;
   const rawFields = raw.fields as Record<string, string[]> | undefined;
+  const rawTransitions = raw.transitions as Record<string, string[]> | undefined;
   const rawDefaults = raw.defaults as Record<string, string> | undefined;
 
   const id: IdConfig = {
@@ -60,6 +63,8 @@ export function parseConfig(yamlStr: string): TaskConfig {
     terminal: rawFields?.terminal ?? DEFAULT_CONFIG.fields.terminal,
   };
 
+  const transitions: Record<string, string[]> | null = rawTransitions ?? null;
+
   const defaults = {
     priority: rawDefaults?.priority ?? DEFAULT_CONFIG.defaults.priority,
     type: rawDefaults?.type ?? DEFAULT_CONFIG.defaults.type,
@@ -67,7 +72,7 @@ export function parseConfig(yamlStr: string): TaskConfig {
     scope: rawDefaults?.scope ?? DEFAULT_CONFIG.defaults.scope,
   };
 
-  return { id, fields, defaults };
+  return { id, fields, transitions, defaults };
 }
 
 export function validateConfig(config: TaskConfig): string[] {
@@ -101,6 +106,23 @@ export function validateConfig(config: TaskConfig): string[] {
     }
   }
 
+  if (config.transitions) {
+    for (const [from, targets] of Object.entries(config.transitions)) {
+      if (!config.fields.status.includes(from)) {
+        errors.push(
+          `Transition source "${from}" not in status values: ${config.fields.status.join(', ')}`,
+        );
+      }
+      for (const to of targets) {
+        if (!config.fields.status.includes(to)) {
+          errors.push(
+            `Transition target "${to}" (from "${from}") not in status values: ${config.fields.status.join(', ')}`,
+          );
+        }
+      }
+    }
+  }
+
   return errors;
 }
 
@@ -126,6 +148,19 @@ export function isValidField(value: string, allowed: string[] | null): boolean {
   return allowed.some((a) => a.toLowerCase() === value.toLowerCase());
 }
 
+export function isValidTransition(
+  from: string,
+  to: string,
+  transitions: Record<string, string[]> | null,
+): boolean {
+  if (!transitions) return true;
+  const allowed = Object.entries(transitions).find(
+    ([key]) => key.toLowerCase() === from.toLowerCase(),
+  );
+  if (!allowed) return false;
+  return allowed[1].some((a) => a.toLowerCase() === to.toLowerCase());
+}
+
 export function normalizeField(value: string, allowed: string[]): string {
   const match = allowed.find((a) => a.toLowerCase() === value.toLowerCase());
   return match ?? value;
@@ -146,6 +181,13 @@ export function serializeConfig(config: TaskConfig): string {
     lines.push(`  scope: [${config.fields.scope.join(', ')}]`);
   }
   lines.push(`  terminal: [${config.fields.terminal.join(', ')}]`);
+
+  if (config.transitions) {
+    lines.push('transitions:');
+    for (const [from, targets] of Object.entries(config.transitions)) {
+      lines.push(`  ${from}: [${targets.join(', ')}]`);
+    }
+  }
 
   lines.push('defaults:');
   lines.push(`  priority: ${config.defaults.priority}`);

@@ -3,12 +3,13 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import { isValidField } from '../core/config.js';
+import { isValidField, isValidTransition } from '../core/config.js';
 
 export function createStatusShortcut(name: string, targetStatus: string): Command {
   return new Command(name)
     .description(`Mark task as ${targetStatus}`)
     .argument('<id>', 'Task ID')
+    .option('--force', 'Bypass transition validation')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
     .option('-q, --quiet', 'Minimal output (just task ID)')
@@ -39,6 +40,13 @@ export function createStatusShortcut(name: string, targetStatus: string): Comman
 
       if (!task) {
         throw taskNotFound(id);
+      }
+
+      if (!opts.force && !isValidTransition(task.status, targetStatus, config.transitions)) {
+        const allowed = config.transitions?.[task.status] ?? [];
+        throw validationError(
+          `Cannot transition from "${task.status}" to "${targetStatus}". Allowed: ${allowed.join(', ') || '(none)'}`,
+        );
       }
 
       task.status = targetStatus;

@@ -23,16 +23,13 @@ defaults:
 # Tasks
 
 ### Task 1
-
-Fix login timeout
 type:bug, priority:high, scope:backend, status:todo, created:2026-04-23, updated:2026-04-23
+Fix login timeout
 
 ### Task 2
-
-Add caching layer
 type:feature, priority:medium, scope:general, status:in-progress, created:2026-04-23, updated:2026-04-23
+Add caching layer
 
 ### Task 3
-
-Completed task
 type:chore, priority:low, scope:backend, status:done, created:2026-04-22, updated:2026-04-22
+Completed task

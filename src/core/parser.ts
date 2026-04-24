@@ -57,7 +57,6 @@ function blockToTask(block: RawBlock, config: TaskConfig, warnings: string[]): T
   const tagMap = new Map<string, string>();
   const extraLines: string[] = [];
   let descriptionFound = false;
-  let tagsFound = false;
 
   const knownTags = ['type', 'priority', 'scope', 'status', 'created', 'updated', 'depends'];
 
@@ -73,8 +72,7 @@ function blockToTask(block: RawBlock, config: TaskConfig, warnings: string[]): T
       for (const [key, value] of potentialTags) {
         tagMap.set(key, value);
       }
-      tagsFound = true;
-    } else if (!descriptionFound && !tagsFound) {
+    } else if (!descriptionFound) {
       description = line.trim();
       descriptionFound = true;
     } else {
@@ -175,7 +173,6 @@ export function parseTaskFile(content: string): TaskFile {
 function taskToBlock(task: Task, config: TaskConfig): string {
   const lines: string[] = [];
   lines.push(`### ${formatId(task.id, config)}`);
-  lines.push(task.description);
   const tags = [
     `type:${task.type}`,
     `priority:${task.priority}`,
@@ -188,6 +185,7 @@ function taskToBlock(task: Task, config: TaskConfig): string {
     tags.push(`depends:${task.depends.join(',')}`);
   }
   lines.push(tags.join(', '));
+  lines.push(task.description);
   for (const extra of task.extraLines) {
     lines.push(extra);
   }

@@ -31,24 +31,24 @@ src/
   commands/
     add.ts              # Add new task (--depends-on, --quiet)
     list.ts             # List/filter tasks (--sort, --status todo,done, --quiet)
-    update.ts           # Update task fields (--note, --depends-on, --quiet)
+    update.ts           # Update task fields (--note, --depends-on, --force, --quiet)
     remove.ts           # Remove by ID
     view.ts             # View single task
     init.ts             # Create TASKS.md with frontmatter template
-    done.ts             # Shortcut: mark task done
-    start.ts            # Shortcut: mark task in-progress
+    move.ts             # Transition task status with validation (--force)
     next.ts             # Highest-priority actionable task (skips blocked + terminal)
     search.ts           # Case-insensitive keyword search
     stats.ts            # Summary counts by status/priority/blocked
-    batch.ts            # Bulk ops via JSON stdin
-    status-shortcut.ts  # Shared factory for done/start commands
+    batch.ts            # Bulk ops via JSON stdin (done/start retained as aliases)
   shared/
     file.ts             # fs read/write/exists wrappers
     output.ts           # Tab-delimited compact + detail formatters, JSON output
     errors.ts           # MdTaskError with exit codes (0=ok, 1=error, 2=not-found)
 ```
 
-**Schema config**: YAML frontmatter in `TASKS.md` defines customizable ID prefix/separator, allowed values for priority/type/status/scope fields, terminal statuses, and defaults. Parsed by `config.ts`, passed through `TaskFile.config` to all consumers. When absent, hardcoded defaults apply.
+**Schema config**: YAML frontmatter in `TASKS.md` defines customizable ID prefix/separator, allowed values for priority/type/status/scope fields, terminal statuses, status transitions, and defaults. Parsed by `config.ts`, passed through `TaskFile.config` to all consumers. When absent, hardcoded defaults apply.
+
+**Status transitions**: Optional `transitions` map in frontmatter defines allowed status changes (e.g., `todo: [in-progress, cancelled]`). When absent, all transitions allowed. `move` and `update --status` validate against the map. `--force` bypasses validation. Case-insensitive matching preserves schema-defined casing.
 
 **Data flow**: All commands follow the same pattern — read `TASKS.md` → `parseTaskFile()` (extracts frontmatter → config, then parses task blocks) → mutate `TaskFile` → `serializeTaskFile()` (writes frontmatter + tasks) → write back.
 

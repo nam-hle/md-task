@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { createUpdateCommand } from '../../../src/commands/update.js';
-import { createStatusShortcut } from '../../../src/commands/status-shortcut.js';
+import { createMoveCommand } from '../../../src/commands/move.js';
 
 const FIXTURES = join(import.meta.dirname, '../../fixtures');
 
@@ -16,17 +16,10 @@ function buildUpdateProgram() {
   return program;
 }
 
-function buildDoneProgram() {
+function buildMoveProgram() {
   const program = new Command();
   program.exitOverride();
-  program.addCommand(createStatusShortcut('done', 'done'));
-  return program;
-}
-
-function buildStartProgram() {
-  const program = new Command();
-  program.exitOverride();
-  program.addCommand(createStatusShortcut('start', 'in-progress'));
+  program.addCommand(createMoveCommand());
   return program;
 }
 
@@ -86,35 +79,37 @@ describe('status transitions in commands', () => {
     });
   });
 
-  describe('done command', () => {
-    it('rejects done from todo (must go through in-progress/review)', async () => {
-      const program = buildDoneProgram();
+  describe('move command', () => {
+    it('rejects move to done from todo (must go through in-progress/review)', async () => {
+      const program = buildMoveProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'done', '1', '--file', file]),
+        program.parseAsync(['node', 'test', 'move', '1', 'done', '--file', file]),
       ).rejects.toThrow('Cannot transition from "todo" to "done"');
     });
 
-    it('allows done with --force', async () => {
-      const program = buildDoneProgram();
-      await program.parseAsync(['node', 'test', 'done', '1', '--file', file, '--force']);
+    it('allows move to done with --force', async () => {
+      const program = buildMoveProgram();
+      await program.parseAsync([
+        'node', 'test', 'move', '1', 'done', '--file', file, '--force',
+      ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:done');
     });
-  });
 
-  describe('start command', () => {
-    it('allows start from todo', async () => {
-      const program = buildStartProgram();
-      await program.parseAsync(['node', 'test', 'start', '1', '--file', file]);
+    it('allows move to in-progress from todo', async () => {
+      const program = buildMoveProgram();
+      await program.parseAsync([
+        'node', 'test', 'move', '1', 'in-progress', '--file', file,
+      ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:in-progress');
     });
 
-    it('rejects start from done', async () => {
-      const program = buildStartProgram();
+    it('rejects move from terminal state', async () => {
+      const program = buildMoveProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'start', '3', '--file', file]),
-      ).rejects.toThrow('Cannot transition from "done" to "in-progress"');
+        program.parseAsync(['node', 'test', 'move', '3', 'todo', '--file', file]),
+      ).rejects.toThrow('Cannot transition from "done" to "todo"');
     });
   });
 });
@@ -138,8 +133,8 @@ describe('no transitions defined (backward compat)', () => {
   });
 
   it('allows any transition when no transitions configured', async () => {
-    const program = buildDoneProgram();
-    await program.parseAsync(['node', 'test', 'done', '1', '--file', file]);
+    const program = buildMoveProgram();
+    await program.parseAsync(['node', 'test', 'move', '1', 'done', '--file', file]);
     const content = await readFile(file, 'utf-8');
     expect(content).toContain('status:done');
   });

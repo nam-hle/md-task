@@ -123,7 +123,12 @@ function escapeRegex(str: string): string {
 
 export function isValidField(value: string, allowed: string[] | null): boolean {
   if (!allowed) return true;
-  return allowed.includes(value.toLowerCase());
+  return allowed.some((a) => a.toLowerCase() === value.toLowerCase());
+}
+
+export function normalizeField(value: string, allowed: string[]): string {
+  const match = allowed.find((a) => a.toLowerCase() === value.toLowerCase());
+  return match ?? value;
 }
 
 export function serializeConfig(config: TaskConfig): string {

@@ -1,4 +1,4 @@
-import { type TaskConfig, DEFAULT_CONFIG, isValidField } from './config.js';
+import { type TaskConfig, DEFAULT_CONFIG, isValidField, normalizeField } from './config.js';
 
 export interface Task {
   id: number;
@@ -40,17 +40,17 @@ export function applyDefaults(
 ): Task {
   const priority =
     input.priority && isValidField(input.priority, config.fields.priority)
-      ? input.priority.toLowerCase()
+      ? normalizeField(input.priority, config.fields.priority)
       : config.defaults.priority;
 
   const type =
     input.type && isValidField(input.type, config.fields.type)
-      ? input.type.toLowerCase()
+      ? normalizeField(input.type, config.fields.type)
       : config.defaults.type;
 
   const status =
     input.status && isValidField(input.status, config.fields.status)
-      ? input.status.toLowerCase()
+      ? normalizeField(input.status, config.fields.status)
       : config.defaults.status;
 
   const scope = input.scope

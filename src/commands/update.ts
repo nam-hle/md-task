@@ -3,7 +3,7 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import { isValidField } from '../core/config.js';
+import { isValidField, normalizeField } from '../core/config.js';
 
 export function createUpdateCommand(): Command {
   return new Command('update')
@@ -62,7 +62,7 @@ export function createUpdateCommand(): Command {
             `Invalid priority: ${opts.priority}. Use: ${config.fields.priority.join(', ')}`,
           );
         }
-        task.priority = (opts.priority as string).toLowerCase();
+        task.priority = normalizeField(opts.priority as string, config.fields.priority);
       }
       if (opts.scope) {
         if (!isValidField(opts.scope, config.fields.scope)) {
@@ -78,7 +78,7 @@ export function createUpdateCommand(): Command {
             `Invalid type: ${opts.type}. Use: ${config.fields.type.join(', ')}`,
           );
         }
-        task.type = (opts.type as string).toLowerCase();
+        task.type = normalizeField(opts.type as string, config.fields.type);
       }
       if (opts.status) {
         if (!isValidField(opts.status, config.fields.status)) {
@@ -86,7 +86,7 @@ export function createUpdateCommand(): Command {
             `Invalid status: ${opts.status}. Use: ${config.fields.status.join(', ')}`,
           );
         }
-        task.status = (opts.status as string).toLowerCase();
+        task.status = normalizeField(opts.status as string, config.fields.status);
       }
 
       if (opts.note) {

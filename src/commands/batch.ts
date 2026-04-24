@@ -4,7 +4,7 @@ import { applyDefaults, type TaskInput } from '../core/task.js';
 import { nextId } from '../core/id.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
-import { isValidField } from '../core/config.js';
+import { isValidField, normalizeField } from '../core/config.js';
 
 interface BatchAction {
   action: 'add' | 'update' | 'remove' | 'done' | 'start';
@@ -74,7 +74,7 @@ export function createBatchCommand(): Command {
               if (!task) throw new Error(`Task ${act.id} not found`);
               if (act.description) task.description = act.description;
               if (act.priority && isValidField(act.priority, config.fields.priority)) {
-                task.priority = act.priority.toLowerCase();
+                task.priority = normalizeField(act.priority, config.fields.priority);
               }
               if (act.scope) {
                 if (isValidField(act.scope, config.fields.scope)) {
@@ -82,10 +82,10 @@ export function createBatchCommand(): Command {
                 }
               }
               if (act.type && isValidField(act.type, config.fields.type)) {
-                task.type = act.type.toLowerCase();
+                task.type = normalizeField(act.type, config.fields.type);
               }
               if (act.status && isValidField(act.status, config.fields.status)) {
-                task.status = act.status.toLowerCase();
+                task.status = normalizeField(act.status, config.fields.status);
               }
               if (act.note) task.extraLines.push(`> ${act.note}`);
               task.updated = new Date().toISOString().slice(0, 10);

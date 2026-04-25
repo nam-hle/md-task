@@ -1,7 +1,7 @@
 ---
 name: md-task
 description: "Manage tasks as markdown files using the md-task CLI. Use when the user wants to track tasks, create task lists, manage project work items, check task status, or plan work in a TASKS.md file. Covers adding, listing, updating, removing, moving, searching, and batch operations on markdown-based tasks with YAML frontmatter schema configuration."
-argument-hint: "[add|list|move|update|next|stats|init|batch]"
+argument-hint: "[add|list|move|update|next|stats|init|batch|format]"
 allowed-tools: Bash(md-task *), Read, Grep, Glob
 ---
 
@@ -12,6 +12,10 @@ CLI for managing tasks as markdown files, optimized for AI agent token usage.
 Tasks stored in `TASKS.md` (default) as markdown with YAML frontmatter (schema config) + `### {prefix}{sep}{id}` headings and comma-separated tag lines.
 
 **ID format**: All commands taking an ID require the prefixed form (e.g., `T-130`, not `130`). Default prefix `T`, separator `-`. Configurable via frontmatter. `--depends-on` lists also require prefixed IDs (`T-3,T-5`).
+
+**Output**: Single-task output (text, JSON, quiet) renders task IDs in prefixed form. JSON `id` field is the formatted string (e.g. `"T-94"`), not a number. Batch input/output uses numeric `id` (machine contract — JSON ints), unaffected.
+
+**Tag-line order**: The order of `priority/type/status/scope` tags in each task block follows the order of keys under `fields:` in YAML frontmatter. Default order when no frontmatter: `status, type, priority, scope`. `created/updated/depends` always trail. Run `md-task format` after editing frontmatter key order to rewrite existing task blocks.
 
 ## Commands
 

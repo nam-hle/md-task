@@ -1,8 +1,9 @@
 import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
-import { formatJson, formatTaskList } from '../shared/output.js';
+import { formatJson, formatTaskList, taskWithFormattedId } from '../shared/output.js';
 import { fileNotFound } from '../shared/errors.js';
+import { formatId } from '../core/config.js';
 
 export function createSearchCommand(): Command {
   return new Command('search')
@@ -21,6 +22,7 @@ export function createSearchCommand(): Command {
 
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
+      const config = taskFile.config;
 
       const lowerQuery = query.toLowerCase();
       const matches = taskFile.tasks.filter((t) => {
@@ -29,11 +31,12 @@ export function createSearchCommand(): Command {
       });
 
       if (opts.quiet) {
-        console.log(matches.map((t) => String(t.id)).join('\n'));
+        console.log(matches.map((t) => formatId(t.id, config)).join('\n'));
       } else if (format === 'json') {
-        console.log(formatJson({ tasks: matches, count: matches.length }));
+        const out = matches.map((t) => taskWithFormattedId(t, config));
+        console.log(formatJson({ tasks: out, count: out.length }));
       } else {
-        console.log(formatTaskList(matches));
+        console.log(formatTaskList(matches, config));
       }
     });
 }

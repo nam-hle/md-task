@@ -95,7 +95,7 @@ describe('add command', () => {
     await program.parseAsync(['node', 'test', 'add', '--file', file, '--quiet', 'Quiet task']);
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
-    expect(output).toBe('1');
+    expect(output).toBe('T-1');
   });
 
   it('outputs JSON when --format json', async () => {
@@ -113,7 +113,7 @@ describe('add command', () => {
 
     const output = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     const parsed = JSON.parse(output);
-    expect(parsed.task.id).toBe(1);
+    expect(parsed.task.id).toBe('T-1');
     expect(parsed.task.description).toBe('JSON task');
   });
 });

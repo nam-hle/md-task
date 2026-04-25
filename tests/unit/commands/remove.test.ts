@@ -49,7 +49,7 @@ describe('remove command', () => {
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     const parsed = JSON.parse(output);
-    expect(parsed.removed.id).toBe(1);
+    expect(parsed.removed.id).toBe('Task 1');
   });
 
   it('errors on non-existent task', async () => {

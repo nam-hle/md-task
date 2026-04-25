@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
-import { formatJson } from '../shared/output.js';
+import { formatJson, taskWithFormattedId } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
 import { isValidField, normalizeField, isValidTransition, parseId, formatId } from '../core/config.js';
 
@@ -42,7 +42,7 @@ export function createMoveCommand(): Command {
       const task = taskFile.tasks.find((t) => t.id === id);
 
       if (!task) {
-        throw taskNotFound(id);
+        throw taskNotFound(formatId(id, config));
       }
 
       if (!opts.force && !isValidTransition(task.status, status, config.transitions)) {
@@ -52,18 +52,20 @@ export function createMoveCommand(): Command {
         );
       }
 
+      const prevStatus = task.status;
       const normalized = normalizeField(status, config.fields.status);
       task.status = normalized;
       task.updated = new Date().toISOString().slice(0, 10);
 
       await writeTasksFile(filePath, serializeTaskFile(taskFile));
 
+      const fid = formatId(task.id, config);
       if (opts.quiet) {
-        console.log(String(task.id));
+        console.log(fid);
       } else if (format === 'json') {
-        console.log(formatJson({ task }));
+        console.log(formatJson({ task: taskWithFormattedId(task, config) }));
       } else {
-        console.log(`Task ${task.id}: ${task.status} → ${normalized}`);
+        console.log(`Task ${fid}: ${prevStatus} → ${normalized}`);
       }
     });
 }

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
-import { formatJson, formatTaskDetail } from '../shared/output.js';
+import { formatJson, formatTaskDetail, taskWithFormattedId } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
 import { parseId, formatId } from '../core/config.js';
 
@@ -34,15 +34,15 @@ export function createViewCommand(): Command {
       const task = taskFile.tasks.find((t) => t.id === id);
 
       if (!task) {
-        throw taskNotFound(id);
+        throw taskNotFound(formatId(id, config));
       }
 
       if (opts.quiet) {
-        console.log(String(task.id));
+        console.log(formatId(task.id, config));
       } else if (format === 'json') {
-        console.log(formatJson({ task }));
+        console.log(formatJson({ task: taskWithFormattedId(task, config) }));
       } else {
-        console.log(formatTaskDetail(task));
+        console.log(formatTaskDetail(task, config));
       }
     });
 }

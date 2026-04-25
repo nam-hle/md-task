@@ -6,6 +6,7 @@ import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { validationError } from '../shared/errors.js';
 import { isValidField, parseIdList, formatId } from '../core/config.js';
+import { taskWithFormattedId } from '../shared/output.js';
 
 export function createAddCommand(): Command {
   return new Command('add')
@@ -84,12 +85,13 @@ export function createAddCommand(): Command {
 
       await writeTasksFile(filePath, serializeTaskFile(taskFile));
 
+      const fid = formatId(task.id, config);
       if (opts.quiet) {
-        console.log(String(task.id));
+        console.log(fid);
       } else if (format === 'json') {
-        console.log(formatJson({ task }));
+        console.log(formatJson({ task: taskWithFormattedId(task, config) }));
       } else {
-        console.log(`Created task ${task.id}: ${task.description}`);
+        console.log(`Created task ${fid}: ${task.description}`);
       }
     });
 }

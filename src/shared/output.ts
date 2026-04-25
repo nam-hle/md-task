@@ -1,8 +1,13 @@
 import type { Task } from '../core/task.js';
+import { type TaskConfig, formatId } from '../core/config.js';
 
-export function formatTaskCompact(task: Task): string {
+export function taskWithFormattedId(task: Task, config: TaskConfig): Omit<Task, 'id'> & { id: string } {
+  return { ...task, id: formatId(task.id, config) };
+}
+
+export function formatTaskCompact(task: Task, config: TaskConfig): string {
   return [
-    String(task.id),
+    formatId(task.id, config),
     task.status,
     task.priority,
     task.scope,
@@ -11,9 +16,9 @@ export function formatTaskCompact(task: Task): string {
   ].join('\t');
 }
 
-export function formatTaskDetail(task: Task): string {
+export function formatTaskDetail(task: Task, config: TaskConfig): string {
   return [
-    `Task ${task.id}`,
+    `Task ${formatId(task.id, config)}`,
     `  Description: ${task.description}`,
     `  Priority:    ${task.priority}`,
     `  Scope:       ${task.scope}`,
@@ -24,11 +29,11 @@ export function formatTaskDetail(task: Task): string {
   ].join('\n');
 }
 
-export function formatTaskList(tasks: Task[]): string {
+export function formatTaskList(tasks: Task[], config: TaskConfig): string {
   if (tasks.length === 0) return 'No tasks found.';
 
   const header = 'ID\tSTATUS\tPRIORITY\tSCOPE\tTYPE\tDESCRIPTION';
-  const rows = tasks.map(formatTaskCompact);
+  const rows = tasks.map((t) => formatTaskCompact(t, config));
   return [header, ...rows].join('\n');
 }
 

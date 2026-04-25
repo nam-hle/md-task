@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
-import { formatJson } from '../shared/output.js';
+import { formatJson, taskWithFormattedId } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
 import { isValidField, normalizeField, isValidTransition, parseId, parseIdList, formatId } from '../core/config.js';
 
@@ -56,7 +56,7 @@ export function createUpdateCommand(): Command {
       const task = taskFile.tasks.find((t) => t.id === id);
 
       if (!task) {
-        throw taskNotFound(id);
+        throw taskNotFound(formatId(id, config));
       }
 
       if (opts.description) task.description = opts.description;
@@ -121,12 +121,13 @@ export function createUpdateCommand(): Command {
 
       await writeTasksFile(filePath, serializeTaskFile(taskFile));
 
+      const fid = formatId(task.id, config);
       if (opts.quiet) {
-        console.log(String(task.id));
+        console.log(fid);
       } else if (format === 'json') {
-        console.log(formatJson({ task }));
+        console.log(formatJson({ task: taskWithFormattedId(task, config) }));
       } else {
-        console.log(`Updated task ${task.id}: ${task.description}`);
+        console.log(`Updated task ${fid}: ${task.description}`);
       }
     });
 }

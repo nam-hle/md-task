@@ -2,8 +2,9 @@ import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
 import type { Task } from '../core/task.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
-import { formatJson, formatTaskDetail } from '../shared/output.js';
+import { formatJson, formatTaskDetail, taskWithFormattedId } from '../shared/output.js';
 import { fileNotFound, EXIT_NOT_FOUND } from '../shared/errors.js';
+import { formatId } from '../core/config.js';
 
 function isBlocked(task: Task, tasks: Task[]): boolean {
   if (task.depends.length === 0) return false;
@@ -69,11 +70,11 @@ export function createNextCommand(): Command {
       }
 
       if (opts.quiet) {
-        console.log(String(next.id));
+        console.log(formatId(next.id, config));
       } else if (format === 'json') {
-        console.log(formatJson({ task: next }));
+        console.log(formatJson({ task: taskWithFormattedId(next, config) }));
       } else {
-        console.log(formatTaskDetail(next));
+        console.log(formatTaskDetail(next, config));
       }
     });
 }

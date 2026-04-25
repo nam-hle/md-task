@@ -73,7 +73,7 @@ describe('move command', () => {
       await program.parseAsync([
         'node', 'test', 'move', 'Task 1', 'done', '--file', file, '--quiet',
       ]);
-      expect(console.log).toHaveBeenCalledWith('1');
+      expect(console.log).toHaveBeenCalledWith('Task 1');
     });
   });
 

@@ -12,7 +12,7 @@ export class MdTaskError extends Error {
   }
 }
 
-export function taskNotFound(id: number): MdTaskError {
+export function taskNotFound(id: number | string): MdTaskError {
   return new MdTaskError(`Task ${id} not found`, EXIT_NOT_FOUND);
 }
 

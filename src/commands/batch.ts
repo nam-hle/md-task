@@ -4,7 +4,7 @@ import { applyDefaults, type TaskInput } from '../core/task.js';
 import { nextId } from '../core/id.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
-import { isValidField, normalizeField, isValidTransition } from '../core/config.js';
+import { isValidField, normalizeField, isValidTransition, formatId } from '../core/config.js';
 
 interface BatchAction {
   action: 'add' | 'update' | 'remove' | 'done' | 'start';
@@ -71,7 +71,7 @@ export function createBatchCommand(): Command {
             case 'update': {
               if (!act.id) throw new Error('id required');
               const task = taskFile.tasks.find((t) => t.id === act.id);
-              if (!task) throw new Error(`Task ${act.id} not found`);
+              if (!task) throw new Error(`Task ${formatId(act.id, config)} not found`);
               if (act.description) task.description = act.description;
               if (act.priority && isValidField(act.priority, config.fields.priority)) {
                 task.priority = normalizeField(act.priority, config.fields.priority);
@@ -100,7 +100,7 @@ export function createBatchCommand(): Command {
             case 'remove': {
               if (!act.id) throw new Error('id required');
               const idx = taskFile.tasks.findIndex((t) => t.id === act.id);
-              if (idx === -1) throw new Error(`Task ${act.id} not found`);
+              if (idx === -1) throw new Error(`Task ${formatId(act.id, config)} not found`);
               taskFile.tasks.splice(idx, 1);
               results.push({ index: i, action: 'remove', ok: true, id: act.id });
               break;
@@ -108,7 +108,7 @@ export function createBatchCommand(): Command {
             case 'done': {
               if (!act.id) throw new Error('id required');
               const task = taskFile.tasks.find((t) => t.id === act.id);
-              if (!task) throw new Error(`Task ${act.id} not found`);
+              if (!task) throw new Error(`Task ${formatId(act.id, config)} not found`);
               if (!isValidTransition(task.status, 'done', config.transitions)) {
                 throw new Error(
                   `Cannot transition from "${task.status}" to "done"`,
@@ -122,7 +122,7 @@ export function createBatchCommand(): Command {
             case 'start': {
               if (!act.id) throw new Error('id required');
               const task = taskFile.tasks.find((t) => t.id === act.id);
-              if (!task) throw new Error(`Task ${act.id} not found`);
+              if (!task) throw new Error(`Task ${formatId(act.id, config)} not found`);
               if (!isValidTransition(task.status, 'in-progress', config.transitions)) {
                 throw new Error(
                   `Cannot transition from "${task.status}" to "in-progress"`,

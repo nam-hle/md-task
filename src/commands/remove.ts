@@ -34,7 +34,7 @@ export function createRemoveCommand(): Command {
       const taskIndex = taskFile.tasks.findIndex((t) => t.id === id);
 
       if (taskIndex === -1) {
-        throw taskNotFound(id);
+        throw taskNotFound(formatId(id, config));
       }
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- index validated by findIndex above
@@ -43,16 +43,17 @@ export function createRemoveCommand(): Command {
 
       await writeTasksFile(filePath, serializeTaskFile(taskFile));
 
+      const fid = formatId(removed.id, config);
       if (opts.quiet) {
-        console.log(String(removed.id));
+        console.log(fid);
       } else if (format === 'json') {
         console.log(
           formatJson({
-            removed: { id: removed.id, description: removed.description },
+            removed: { id: fid, description: removed.description },
           }),
         );
       } else {
-        console.log(`Removed task ${removed.id}: ${removed.description}`);
+        console.log(`Removed task ${fid}: ${removed.description}`);
       }
     });
 }

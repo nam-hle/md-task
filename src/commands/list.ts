@@ -2,8 +2,9 @@ import { Command } from 'commander';
 import { parseTaskFile } from '../core/parser.js';
 import type { Task } from '../core/task.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
-import { formatJson, formatTaskList } from '../shared/output.js';
+import { formatJson, formatTaskList, taskWithFormattedId } from '../shared/output.js';
 import { fileNotFound } from '../shared/errors.js';
+import { formatId } from '../core/config.js';
 
 export function createListCommand(): Command {
   return new Command('list')
@@ -74,11 +75,12 @@ export function createListCommand(): Command {
       }
 
       if (opts.quiet) {
-        console.log(tasks.map((t) => String(t.id)).join('\n'));
+        console.log(tasks.map((t) => formatId(t.id, config)).join('\n'));
       } else if (format === 'json') {
-        console.log(formatJson({ tasks, count: tasks.length }));
+        const out = tasks.map((t) => taskWithFormattedId(t, config));
+        console.log(formatJson({ tasks: out, count: out.length }));
       } else {
-        console.log(formatTaskList(tasks));
+        console.log(formatTaskList(tasks, config));
       }
     });
 }

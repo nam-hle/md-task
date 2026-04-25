@@ -88,7 +88,7 @@ describe('next command', () => {
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     const parsed = JSON.parse(output);
-    expect(parsed.task.id).toBe(2);
+    expect(parsed.task.id).toBe('T-2');
   });
 
   it('returns null when no actionable tasks', async () => {

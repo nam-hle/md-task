@@ -35,7 +35,7 @@ describe('remove command', () => {
 
   it('removes existing task', async () => {
     const program = buildProgram();
-    await program.parseAsync(['node', 'test', 'remove', '2', '--file', file]);
+    await program.parseAsync(['node', 'test', 'remove', 'Task 2', '--file', file]);
 
     const content = await readFile(file, 'utf-8');
     expect(content).not.toContain('### Task 2');
@@ -45,7 +45,7 @@ describe('remove command', () => {
 
   it('outputs JSON when --format json', async () => {
     const program = buildProgram();
-    await program.parseAsync(['node', 'test', 'remove', '1', '--file', file, '--format', 'json']);
+    await program.parseAsync(['node', 'test', 'remove', 'Task 1', '--file', file, '--format', 'json']);
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     const parsed = JSON.parse(output);
@@ -55,7 +55,7 @@ describe('remove command', () => {
   it('errors on non-existent task', async () => {
     const program = buildProgram();
     await expect(
-      program.parseAsync(['node', 'test', 'remove', '999', '--file', file]),
+      program.parseAsync(['node', 'test', 'remove', 'Task 999', '--file', file]),
     ).rejects.toThrow('Task 999 not found');
   });
 });

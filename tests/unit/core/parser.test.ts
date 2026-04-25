@@ -87,14 +87,14 @@ describe('parseTaskFile (lenient)', () => {
 describe('depends field', () => {
   it('parses depends field', () => {
     const content =
-      '# Tasks\n\n### Task 1\ntype:task, priority:medium, scope:general, status:todo, created:2026-01-01, updated:2026-01-01, depends:2,3\nFoo\n';
+      '# Tasks\n\n### T-1\ntype:task, priority:medium, scope:general, status:todo, created:2026-01-01, updated:2026-01-01, depends:2,3\nFoo\n';
     const result = parseTaskFile(content);
     expect(result.tasks[0]!.depends).toEqual([2, 3]);
   });
 
   it('serializes depends field only when non-empty', () => {
     const content =
-      '# Tasks\n\n### Task 1\ntype:task, priority:medium, scope:general, status:todo, created:2026-01-01, updated:2026-01-01\nFoo\n';
+      '# Tasks\n\n### T-1\ntype:task, priority:medium, scope:general, status:todo, created:2026-01-01, updated:2026-01-01\nFoo\n';
     const parsed = parseTaskFile(content);
     const serialized = serializeTaskFile(parsed);
     expect(serialized).not.toContain('depends:');

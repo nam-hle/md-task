@@ -35,7 +35,7 @@ describe('view command', () => {
 
   it('shows task details', async () => {
     const program = buildProgram();
-    await program.parseAsync(['node', 'test', 'view', '1', '--file', file]);
+    await program.parseAsync(['node', 'test', 'view', 'Task 1', '--file', file]);
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     expect(output).toContain('Task 1');
@@ -46,7 +46,7 @@ describe('view command', () => {
 
   it('outputs JSON when --format json', async () => {
     const program = buildProgram();
-    await program.parseAsync(['node', 'test', 'view', '1', '--file', file, '--format', 'json']);
+    await program.parseAsync(['node', 'test', 'view', 'Task 1', '--file', file, '--format', 'json']);
 
     const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     const parsed = JSON.parse(output);
@@ -57,7 +57,7 @@ describe('view command', () => {
   it('errors on non-existent task', async () => {
     const program = buildProgram();
     await expect(
-      program.parseAsync(['node', 'test', 'view', '999', '--file', file]),
+      program.parseAsync(['node', 'test', 'view', 'Task 999', '--file', file]),
     ).rejects.toThrow('Task 999 not found');
   });
 });

@@ -24,22 +24,22 @@ md-task init
 # Add tasks
 md-task add "Fix login timeout" --priority high --type bug --scope backend
 md-task add "Add caching layer" --type feature
-md-task add "Write tests for auth" --depends-on 1
+md-task add "Write tests for auth" --depends-on T-1
 
 # Work on tasks
 md-task next                          # Show highest-priority actionable task
-md-task start 1                       # Mark as in-progress
-md-task done 1                        # Mark as done
+md-task move T-1 in-progress          # Transition status
+md-task move T-1 done
 
 # View and filter
 md-task list                          # All tasks
 md-task list --status todo,in-progress --sort priority
-md-task view 1
+md-task view T-1
 md-task search "login"
 
 # Update tasks
-md-task update 2 --priority critical
-md-task update 2 --note "tried redis, too complex"
+md-task update T-2 --priority critical
+md-task update T-2 --note "tried redis, too complex"
 
 # Summary
 md-task stats
@@ -52,8 +52,8 @@ md-task stats
 ```markdown
 ---
 id:
-  prefix: Task
-  separator: ' '
+  prefix: T
+  separator: '-'
 fields:
   priority: [critical, high, medium, low]
   type: [feature, bug, task, chore]
@@ -68,12 +68,12 @@ defaults:
 
 # Tasks
 
-### Task 1
+### T-1
 
 Fix login timeout
 type:bug, priority:high, scope:backend, status:todo, created:2025-01-15, updated:2025-01-15
 
-### Task 2
+### T-2
 
 Add caching layer
 type:feature, priority:medium, scope:general, status:in-progress, created:2025-01-15, updated:2025-01-16, depends:1
@@ -137,6 +137,7 @@ Applied when a field is omitted during `md-task add`.
 | Command                     | Description              |
 | --------------------------- | ------------------------ |
 | `md-task init`              | Create empty `TASKS.md`  |
+| `md-task format`            | Reformat tasks after frontmatter edits (idempotent; `--check` for CI) |
 | `md-task add <description>` | Add a new task           |
 | `md-task update <id>`       | Update task attributes   |
 | `md-task remove <id>`       | Remove a task            |
@@ -178,9 +179,9 @@ md-task list --quiet                # Minimal output (one ID per line)
 Returns just the essential data — no headers, no formatting:
 
 ```bash
-md-task add "Fix bug" --quiet       # → "1"
-md-task next --quiet                # → "3"
-md-task list --status todo --quiet  # → "1\n3\n5"
+md-task add "Fix bug" --quiet       # → "T-1"
+md-task next --quiet                # → "T-3"
+md-task list --status todo --quiet  # → "T-1\nT-3\nT-5"
 md-task stats --quiet               # → "12"
 ```
 

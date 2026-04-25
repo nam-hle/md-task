@@ -5,6 +5,8 @@ export interface IdConfig {
   separator: string;
 }
 
+export type FieldName = 'priority' | 'type' | 'status' | 'scope';
+
 export interface TaskConfig {
   id: IdConfig;
   fields: {
@@ -14,6 +16,7 @@ export interface TaskConfig {
     scope: string[] | null;
     terminal: string[];
   };
+  fieldOrder: FieldName[];
   transitions: Record<string, string[]> | null;
   defaults: {
     priority: string;
@@ -23,8 +26,10 @@ export interface TaskConfig {
   };
 }
 
+const ORDERABLE_FIELDS: readonly FieldName[] = ['status', 'type', 'priority', 'scope'];
+
 export const DEFAULT_CONFIG: TaskConfig = {
-  id: { prefix: 'Task', separator: ' ' },
+  id: { prefix: 'T', separator: '-' },
   fields: {
     priority: ['critical', 'high', 'medium', 'low'],
     type: ['feature', 'bug', 'task', 'chore'],
@@ -32,6 +37,7 @@ export const DEFAULT_CONFIG: TaskConfig = {
     scope: null,
     terminal: ['done', 'cancelled'],
   },
+  fieldOrder: ['status', 'type', 'priority', 'scope'],
   transitions: null,
   defaults: {
     priority: 'medium',
@@ -63,6 +69,8 @@ export function parseConfig(yamlStr: string): TaskConfig {
     terminal: rawFields?.terminal ?? DEFAULT_CONFIG.fields.terminal,
   };
 
+  const fieldOrder = computeFieldOrder(rawFields);
+
   const transitions: Record<string, string[]> | null = rawTransitions ?? null;
 
   const defaults = {
@@ -72,7 +80,21 @@ export function parseConfig(yamlStr: string): TaskConfig {
     scope: rawDefaults?.scope ?? DEFAULT_CONFIG.defaults.scope,
   };
 
-  return { id, fields, transitions, defaults };
+  return { id, fields, fieldOrder, transitions, defaults };
+}
+
+function computeFieldOrder(rawFields: Record<string, unknown> | undefined): FieldName[] {
+  if (!rawFields) return [...DEFAULT_CONFIG.fieldOrder];
+  const order: FieldName[] = [];
+  for (const key of Object.keys(rawFields)) {
+    if (ORDERABLE_FIELDS.includes(key as FieldName) && !order.includes(key as FieldName)) {
+      order.push(key as FieldName);
+    }
+  }
+  for (const f of DEFAULT_CONFIG.fieldOrder) {
+    if (!order.includes(f)) order.push(f);
+  }
+  return order;
 }
 
 export function validateConfig(config: TaskConfig): string[] {
@@ -130,6 +152,28 @@ export function formatId(id: number, config: TaskConfig): string {
   return `${config.id.prefix}${config.id.separator}${id}`;
 }
 
+export function parseId(idStr: string, config: TaskConfig): number | null {
+  const prefix = escapeRegex(config.id.prefix);
+  const separator = escapeRegex(config.id.separator);
+  const re = new RegExp(`^${prefix}${separator}(\\d+)$`);
+  const match = re.exec(idStr.trim());
+  if (!match?.[1]) return null;
+  return parseInt(match[1], 10);
+}
+
+export function parseIdList(idsStr: string, config: TaskConfig): { ids: number[]; invalid: string[] } {
+  const ids: number[] = [];
+  const invalid: string[] = [];
+  for (const part of idsStr.split(',')) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const id = parseId(trimmed, config);
+    if (id === null) invalid.push(trimmed);
+    else ids.push(id);
+  }
+  return { ids, invalid };
+}
+
 export function parseIdFromHeading(heading: string, config: TaskConfig): number | null {
   const prefix = escapeRegex(config.id.prefix);
   const separator = escapeRegex(config.id.separator);
@@ -174,11 +218,14 @@ export function serializeConfig(config: TaskConfig): string {
   lines.push(`  separator: "${config.id.separator}"`);
 
   lines.push('fields:');
-  lines.push(`  priority: [${config.fields.priority.join(', ')}]`);
-  lines.push(`  type: [${config.fields.type.join(', ')}]`);
-  lines.push(`  status: [${config.fields.status.join(', ')}]`);
-  if (config.fields.scope) {
-    lines.push(`  scope: [${config.fields.scope.join(', ')}]`);
+  for (const f of config.fieldOrder) {
+    if (f === 'scope') {
+      if (config.fields.scope) {
+        lines.push(`  scope: [${config.fields.scope.join(', ')}]`);
+      }
+    } else {
+      lines.push(`  ${f}: [${config.fields[f].join(', ')}]`);
+    }
   }
   lines.push(`  terminal: [${config.fields.terminal.join(', ')}]`);
 

@@ -35,7 +35,7 @@ describe('update command', () => {
 
   it('updates task status', async () => {
     const program = buildProgram();
-    await program.parseAsync(['node', 'test', 'update', '1', '--file', file, '--status', 'done']);
+    await program.parseAsync(['node', 'test', 'update', 'Task 1', '--file', file, '--status', 'done']);
 
     const content = await readFile(file, 'utf-8');
     expect(content).toContain('status:done');
@@ -48,7 +48,7 @@ describe('update command', () => {
       'node',
       'test',
       'update',
-      '1',
+      'Task 1',
       '--file',
       file,
       '--priority',
@@ -68,7 +68,7 @@ describe('update command', () => {
       'node',
       'test',
       'update',
-      '1',
+      'Task 1',
       '--file',
       file,
       '--format',
@@ -85,7 +85,7 @@ describe('update command', () => {
   it('errors on non-existent task', async () => {
     const program = buildProgram();
     await expect(
-      program.parseAsync(['node', 'test', 'update', '999', '--file', file, '--status', 'done']),
+      program.parseAsync(['node', 'test', 'update', 'Task 999', '--file', file, '--status', 'done']),
     ).rejects.toThrow('Task 999 not found');
   });
 
@@ -95,7 +95,7 @@ describe('update command', () => {
       'node',
       'test',
       'update',
-      '1',
+      'Task 1',
       '--file',
       file,
       '--note',
@@ -108,8 +108,8 @@ describe('update command', () => {
 
   it('appends multiple notes', async () => {
     const program = buildProgram();
-    await program.parseAsync(['node', 'test', 'update', '1', '--file', file, '--note', 'note 1']);
-    await program.parseAsync(['node', 'test', 'update', '1', '--file', file, '--note', 'note 2']);
+    await program.parseAsync(['node', 'test', 'update', 'Task 1', '--file', file, '--note', 'note 1']);
+    await program.parseAsync(['node', 'test', 'update', 'Task 1', '--file', file, '--note', 'note 2']);
 
     const content = await readFile(file, 'utf-8');
     expect(content).toContain('> note 1');
@@ -119,7 +119,7 @@ describe('update command', () => {
   it('errors when no update options given', async () => {
     const program = buildProgram();
     await expect(
-      program.parseAsync(['node', 'test', 'update', '1', '--file', file]),
+      program.parseAsync(['node', 'test', 'update', 'Task 1', '--file', file]),
     ).rejects.toThrow('No update options provided');
   });
 });

@@ -10,6 +10,7 @@ import { createSearchCommand } from './commands/search.js';
 import { createStatsCommand } from './commands/stats.js';
 import { createBatchCommand } from './commands/batch.js';
 import { createMoveCommand } from './commands/move.js';
+import { createFormatCommand } from './commands/format.js';
 import { MdTaskError } from './shared/errors.js';
 
 const program = new Command();
@@ -27,6 +28,7 @@ program.addCommand(createSearchCommand());
 program.addCommand(createStatsCommand());
 program.addCommand(createBatchCommand());
 program.addCommand(createMoveCommand());
+program.addCommand(createFormatCommand());
 
 program.parseAsync(process.argv).catch((err: unknown) => {
   if (err instanceof MdTaskError) {

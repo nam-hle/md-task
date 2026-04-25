@@ -173,14 +173,12 @@ export function parseTaskFile(content: string): TaskFile {
 function taskToBlock(task: Task, config: TaskConfig): string {
   const lines: string[] = [];
   lines.push(`### ${formatId(task.id, config)}`);
-  const tags = [
-    `type:${task.type}`,
-    `priority:${task.priority}`,
-    `scope:${task.scope}`,
-    `status:${task.status}`,
-    `created:${task.created}`,
-    `updated:${task.updated}`,
-  ];
+  const tags: string[] = [];
+  for (const f of config.fieldOrder) {
+    tags.push(`${f}:${task[f]}`);
+  }
+  tags.push(`created:${task.created}`);
+  tags.push(`updated:${task.updated}`);
   if (task.depends.length > 0) {
     tags.push(`depends:${task.depends.join(',')}`);
   }
@@ -197,7 +195,10 @@ export function serializeTaskFile(taskFile: TaskFile): string {
 
   parts.push(serializeConfig(taskFile.config));
 
-  parts.push(taskFile.header.join('\n'));
+  const trimmedHeader = trimBlankBoundaries(taskFile.header);
+  if (trimmedHeader.length > 0) {
+    parts.push(trimmedHeader.join('\n'));
+  }
 
   for (const task of taskFile.tasks) {
     parts.push(taskToBlock(task, taskFile.config));
@@ -208,4 +209,12 @@ export function serializeTaskFile(taskFile: TaskFile): string {
     result += '\n';
   }
   return result;
+}
+
+function trimBlankBoundaries(lines: string[]): string[] {
+  let start = 0;
+  let end = lines.length;
+  while (start < end && lines[start]!.trim() === '') start++;
+  while (end > start && lines[end - 1]!.trim() === '') end--;
+  return lines.slice(start, end);
 }

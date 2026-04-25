@@ -3,6 +3,7 @@ import { parseTaskFile } from '../core/parser.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, formatTaskDetail } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
+import { parseId, formatId } from '../core/config.js';
 
 export function createViewCommand(): Command {
   return new Command('view')
@@ -14,11 +15,6 @@ export function createViewCommand(): Command {
     .action(async (idStr: string, opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
-      const id = parseInt(idStr, 10);
-
-      if (isNaN(id)) {
-        throw validationError(`Invalid task ID: ${idStr}`);
-      }
 
       if (!(await fileExists(filePath))) {
         throw fileNotFound(filePath);
@@ -26,6 +22,15 @@ export function createViewCommand(): Command {
 
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
+      const config = taskFile.config;
+
+      const id = parseId(idStr, config);
+      if (id === null) {
+        throw validationError(
+          `Invalid task ID: "${idStr}". Expected format: ${formatId(0, config).replace(/0$/, '<n>')}`,
+        );
+      }
+
       const task = taskFile.tasks.find((t) => t.id === id);
 
       if (!task) {

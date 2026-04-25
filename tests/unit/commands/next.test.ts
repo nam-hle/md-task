@@ -72,11 +72,11 @@ describe('next command', () => {
     const content = [
       '# Tasks',
       '',
-      '### Task 1',
+      '### T-1',
       'Blocked task',
       'type:task, priority:critical, scope:general, status:todo, created:2026-01-01, updated:2026-01-01, depends:2',
       '',
-      '### Task 2',
+      '### T-2',
       'Dependency not done',
       'type:task, priority:low, scope:general, status:todo, created:2026-01-01, updated:2026-01-01',
       '',
@@ -93,7 +93,7 @@ describe('next command', () => {
 
   it('returns null when no actionable tasks', async () => {
     const content =
-      '# Tasks\n\n### Task 1\nDone task\ntype:task, priority:high, scope:general, status:done, created:2026-01-01, updated:2026-01-01\n';
+      '# Tasks\n\n### T-1\nDone task\ntype:task, priority:high, scope:general, status:done, created:2026-01-01, updated:2026-01-01\n';
     await writeFile(file, content, 'utf-8');
 
     const program = buildProgram();

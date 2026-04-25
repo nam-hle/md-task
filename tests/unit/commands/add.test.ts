@@ -33,7 +33,7 @@ describe('add command', () => {
     await program.parseAsync(['node', 'test', 'add', '--file', file, 'My task']);
 
     const content = await readFile(file, 'utf-8');
-    expect(content).toContain('### Task 1');
+    expect(content).toContain('### T-1');
     expect(content).toContain('My task');
     expect(content).toContain('type:task');
     expect(content).toContain('priority:medium');
@@ -45,8 +45,8 @@ describe('add command', () => {
     await program.parseAsync(['node', 'test', 'add', '--file', file, 'Second task']);
 
     const content = await readFile(file, 'utf-8');
-    expect(content).toContain('### Task 1');
-    expect(content).toContain('### Task 2');
+    expect(content).toContain('### T-1');
+    expect(content).toContain('### T-2');
     expect(content).toContain('Second task');
   });
 
@@ -82,7 +82,7 @@ describe('add command', () => {
       '--file',
       file,
       '--depends-on',
-      '1,2',
+      'T-1,T-2',
       'Dependent task',
     ]);
 

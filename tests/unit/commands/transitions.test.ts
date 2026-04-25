@@ -45,7 +45,7 @@ describe('status transitions in commands', () => {
     it('allows valid transition: todo → in-progress', async () => {
       const program = buildUpdateProgram();
       await program.parseAsync([
-        'node', 'test', 'update', '1', '--file', file, '--status', 'in-progress',
+        'node', 'test', 'update', 'Task 1', '--file', file, '--status', 'in-progress',
       ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:in-progress');
@@ -55,7 +55,7 @@ describe('status transitions in commands', () => {
       const program = buildUpdateProgram();
       await expect(
         program.parseAsync([
-          'node', 'test', 'update', '1', '--file', file, '--status', 'done',
+          'node', 'test', 'update', 'Task 1', '--file', file, '--status', 'done',
         ]),
       ).rejects.toThrow('Cannot transition from "todo" to "done"');
     });
@@ -64,7 +64,7 @@ describe('status transitions in commands', () => {
       const program = buildUpdateProgram();
       await expect(
         program.parseAsync([
-          'node', 'test', 'update', '3', '--file', file, '--status', 'todo',
+          'node', 'test', 'update', 'Task 3', '--file', file, '--status', 'todo',
         ]),
       ).rejects.toThrow('Cannot transition from "done" to "todo"');
     });
@@ -72,7 +72,7 @@ describe('status transitions in commands', () => {
     it('allows invalid transition with --force', async () => {
       const program = buildUpdateProgram();
       await program.parseAsync([
-        'node', 'test', 'update', '1', '--file', file, '--status', 'done', '--force',
+        'node', 'test', 'update', 'Task 1', '--file', file, '--status', 'done', '--force',
       ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:done');
@@ -83,14 +83,14 @@ describe('status transitions in commands', () => {
     it('rejects move to done from todo (must go through in-progress/review)', async () => {
       const program = buildMoveProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'move', '1', 'done', '--file', file]),
+        program.parseAsync(['node', 'test', 'move', 'Task 1', 'done', '--file', file]),
       ).rejects.toThrow('Cannot transition from "todo" to "done"');
     });
 
     it('allows move to done with --force', async () => {
       const program = buildMoveProgram();
       await program.parseAsync([
-        'node', 'test', 'move', '1', 'done', '--file', file, '--force',
+        'node', 'test', 'move', 'Task 1', 'done', '--file', file, '--force',
       ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:done');
@@ -99,7 +99,7 @@ describe('status transitions in commands', () => {
     it('allows move to in-progress from todo', async () => {
       const program = buildMoveProgram();
       await program.parseAsync([
-        'node', 'test', 'move', '1', 'in-progress', '--file', file,
+        'node', 'test', 'move', 'Task 1', 'in-progress', '--file', file,
       ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:in-progress');
@@ -108,7 +108,7 @@ describe('status transitions in commands', () => {
     it('rejects move from terminal state', async () => {
       const program = buildMoveProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'move', '3', 'todo', '--file', file]),
+        program.parseAsync(['node', 'test', 'move', 'Task 3', 'todo', '--file', file]),
       ).rejects.toThrow('Cannot transition from "done" to "todo"');
     });
   });
@@ -134,7 +134,7 @@ describe('no transitions defined (backward compat)', () => {
 
   it('allows any transition when no transitions configured', async () => {
     const program = buildMoveProgram();
-    await program.parseAsync(['node', 'test', 'move', '1', 'done', '--file', file]);
+    await program.parseAsync(['node', 'test', 'move', 'Task 1', 'done', '--file', file]);
     const content = await readFile(file, 'utf-8');
     expect(content).toContain('status:done');
   });

@@ -5,7 +5,7 @@ import { nextId } from '../core/id.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { validationError } from '../shared/errors.js';
-import { isValidField } from '../core/config.js';
+import { isValidField, parseIdList, formatId } from '../core/config.js';
 
 export function createAddCommand(): Command {
   return new Command('add')
@@ -58,13 +58,24 @@ export function createAddCommand(): Command {
         );
       }
 
+      let dependsStr: string | undefined;
+      if (opts.dependsOn) {
+        const { ids, invalid } = parseIdList(opts.dependsOn as string, config);
+        if (invalid.length > 0) {
+          throw validationError(
+            `Invalid task ID(s) in --depends-on: ${invalid.join(', ')}. Expected format: ${formatId(0, config).replace(/0$/, '<n>')}`,
+          );
+        }
+        dependsStr = ids.join(',');
+      }
+
       const input: TaskInput = {
         description: description.trim(),
         priority: opts.priority,
         scope: opts.scope,
         type: opts.type,
         status: opts.status,
-        depends: opts.dependsOn,
+        depends: dependsStr,
       };
 
       const id = nextId(taskFile.tasks);

@@ -3,7 +3,7 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import { isValidField, normalizeField, isValidTransition } from '../core/config.js';
+import { isValidField, normalizeField, isValidTransition, parseId, parseIdList, formatId } from '../core/config.js';
 
 export function createUpdateCommand(): Command {
   return new Command('update')
@@ -23,11 +23,6 @@ export function createUpdateCommand(): Command {
     .action(async (idStr: string, opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
-      const id = parseInt(idStr, 10);
-
-      if (isNaN(id)) {
-        throw validationError(`Invalid task ID: ${idStr}`);
-      }
 
       if (
         !opts.description &&
@@ -50,6 +45,14 @@ export function createUpdateCommand(): Command {
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
       const config = taskFile.config;
+
+      const id = parseId(idStr, config);
+      if (id === null) {
+        throw validationError(
+          `Invalid task ID: "${idStr}". Expected format: ${formatId(0, config).replace(/0$/, '<n>')}`,
+        );
+      }
+
       const task = taskFile.tasks.find((t) => t.id === id);
 
       if (!task) {
@@ -101,12 +104,17 @@ export function createUpdateCommand(): Command {
       }
 
       if (opts.dependsOn !== undefined) {
-        task.depends = opts.dependsOn
-          ? (opts.dependsOn as string)
-              .split(',')
-              .map((s: string) => parseInt(s.trim(), 10))
-              .filter((n: number) => !isNaN(n))
-          : [];
+        if (opts.dependsOn) {
+          const { ids, invalid } = parseIdList(opts.dependsOn as string, config);
+          if (invalid.length > 0) {
+            throw validationError(
+              `Invalid task ID(s) in --depends-on: ${invalid.join(', ')}. Expected format: ${formatId(0, config).replace(/0$/, '<n>')}`,
+            );
+          }
+          task.depends = ids;
+        } else {
+          task.depends = [];
+        }
       }
 
       task.updated = new Date().toISOString().slice(0, 10);

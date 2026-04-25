@@ -36,7 +36,7 @@ describe('update command with uppercase schema', () => {
   it('accepts uppercase priority from schema', async () => {
     const program = buildProgram();
     await program.parseAsync([
-      'node', 'test', 'update', '1', '--file', file, '--priority', 'P0',
+      'node', 'test', 'update', 'TASK-1', '--file', file, '--priority', 'P0',
     ]);
 
     const content = await readFile(file, 'utf-8');
@@ -46,7 +46,7 @@ describe('update command with uppercase schema', () => {
   it('accepts lowercase input and stores schema casing', async () => {
     const program = buildProgram();
     await program.parseAsync([
-      'node', 'test', 'update', '1', '--file', file, '--priority', 'p0',
+      'node', 'test', 'update', 'TASK-1', '--file', file, '--priority', 'p0',
     ]);
 
     const content = await readFile(file, 'utf-8');
@@ -56,7 +56,7 @@ describe('update command with uppercase schema', () => {
   it('accepts mixed-case status input', async () => {
     const program = buildProgram();
     await program.parseAsync([
-      'node', 'test', 'update', '1', '--file', file, '--status', 'done',
+      'node', 'test', 'update', 'TASK-1', '--file', file, '--status', 'done',
     ]);
 
     const content = await readFile(file, 'utf-8');
@@ -67,7 +67,7 @@ describe('update command with uppercase schema', () => {
     const program = buildProgram();
     await expect(
       program.parseAsync([
-        'node', 'test', 'update', '1', '--file', file, '--priority', 'P5',
+        'node', 'test', 'update', 'TASK-1', '--file', file, '--priority', 'P5',
       ]),
     ).rejects.toThrow('Invalid priority');
   });

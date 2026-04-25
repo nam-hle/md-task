@@ -39,7 +39,7 @@ describe('move command', () => {
 
     it('moves task to new status', async () => {
       const program = buildProgram();
-      await program.parseAsync(['node', 'test', 'move', '1', 'done', '--file', file]);
+      await program.parseAsync(['node', 'test', 'move', 'Task 1', 'done', '--file', file]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:done');
     });
@@ -47,21 +47,21 @@ describe('move command', () => {
     it('rejects invalid status', async () => {
       const program = buildProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'move', '1', 'invalid', '--file', file]),
+        program.parseAsync(['node', 'test', 'move', 'Task 1', 'invalid', '--file', file]),
       ).rejects.toThrow('Invalid status');
     });
 
     it('errors on non-existent task', async () => {
       const program = buildProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'move', '999', 'done', '--file', file]),
+        program.parseAsync(['node', 'test', 'move', 'Task 999', 'done', '--file', file]),
       ).rejects.toThrow('Task 999 not found');
     });
 
     it('outputs JSON with --format json', async () => {
       const program = buildProgram();
       await program.parseAsync([
-        'node', 'test', 'move', '1', 'done', '--file', file, '--format', 'json',
+        'node', 'test', 'move', 'Task 1', 'done', '--file', file, '--format', 'json',
       ]);
       const output: string = (console.log as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
       const parsed = JSON.parse(output);
@@ -71,7 +71,7 @@ describe('move command', () => {
     it('outputs just ID with --quiet', async () => {
       const program = buildProgram();
       await program.parseAsync([
-        'node', 'test', 'move', '1', 'done', '--file', file, '--quiet',
+        'node', 'test', 'move', 'Task 1', 'done', '--file', file, '--quiet',
       ]);
       expect(console.log).toHaveBeenCalledWith('1');
     });
@@ -86,7 +86,7 @@ describe('move command', () => {
     it('allows valid transition', async () => {
       const program = buildProgram();
       await program.parseAsync([
-        'node', 'test', 'move', '1', 'in-progress', '--file', file,
+        'node', 'test', 'move', 'Task 1', 'in-progress', '--file', file,
       ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:in-progress');
@@ -95,14 +95,14 @@ describe('move command', () => {
     it('rejects invalid transition', async () => {
       const program = buildProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'move', '1', 'done', '--file', file]),
+        program.parseAsync(['node', 'test', 'move', 'Task 1', 'done', '--file', file]),
       ).rejects.toThrow('Cannot transition from "todo" to "done"');
     });
 
     it('allows invalid transition with --force', async () => {
       const program = buildProgram();
       await program.parseAsync([
-        'node', 'test', 'move', '1', 'done', '--file', file, '--force',
+        'node', 'test', 'move', 'Task 1', 'done', '--file', file, '--force',
       ]);
       const content = await readFile(file, 'utf-8');
       expect(content).toContain('status:done');
@@ -111,7 +111,7 @@ describe('move command', () => {
     it('rejects transition from terminal state', async () => {
       const program = buildProgram();
       await expect(
-        program.parseAsync(['node', 'test', 'move', '3', 'todo', '--file', file]),
+        program.parseAsync(['node', 'test', 'move', 'Task 3', 'todo', '--file', file]),
       ).rejects.toThrow('Cannot transition from "done" to "todo"');
     });
   });

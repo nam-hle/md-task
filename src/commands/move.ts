@@ -3,7 +3,7 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import { isValidField, normalizeField, isValidTransition } from '../core/config.js';
+import { isValidField, normalizeField, isValidTransition, parseId, formatId } from '../core/config.js';
 
 export function createMoveCommand(): Command {
   return new Command('move')
@@ -17,11 +17,6 @@ export function createMoveCommand(): Command {
     .action(async (idStr: string, status: string, opts) => {
       const filePath: string = opts.file;
       const format: string = opts.format;
-      const id = parseInt(idStr, 10);
-
-      if (isNaN(id)) {
-        throw validationError(`Invalid task ID: ${idStr}`);
-      }
 
       if (!(await fileExists(filePath))) {
         throw fileNotFound(filePath);
@@ -30,6 +25,13 @@ export function createMoveCommand(): Command {
       const content = await readTasksFile(filePath);
       const taskFile = parseTaskFile(content);
       const config = taskFile.config;
+
+      const id = parseId(idStr, config);
+      if (id === null) {
+        throw validationError(
+          `Invalid task ID: "${idStr}". Expected format: ${formatId(0, config).replace(/0$/, '<n>')}`,
+        );
+      }
 
       if (!isValidField(status, config.fields.status)) {
         throw validationError(

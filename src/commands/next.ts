@@ -4,21 +4,25 @@ import type { Task } from '../core/task.js';
 import { readTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, formatTaskDetail, taskWithFormattedId } from '../shared/output.js';
 import { fileNotFound, EXIT_NOT_FOUND } from '../shared/errors.js';
-import { formatId } from '../core/config.js';
+import { formatId, type TaskConfig, DEFAULT_CONFIG } from '../core/config.js';
+import { valuesHelp } from '../shared/cli-config.js';
 
-function isBlocked(task: Task, tasks: Task[]): boolean {
+function isBlocked(task: Task, tasks: Task[], terminal: string[]): boolean {
   if (task.depends.length === 0) return false;
   return task.depends.some((depId) => {
     const dep = tasks.find((t) => t.id === depId);
-    return !dep || dep.status !== 'done';
+    return !dep || !terminal.includes(dep.status);
   });
 }
 
-export function createNextCommand(): Command {
-  return new Command('next')
+export function createNextCommand(config: TaskConfig = DEFAULT_CONFIG): Command {
+  const cmd = new Command('next')
     .description('Show highest-priority actionable task')
-    .option('--scope <value>', 'Filter by scope')
-    .option('--type <value>', 'Filter by type')
+    .option('--type <value>', `Filter by type (${valuesHelp(config.fields.type)})`)
+    .option(
+      '--scope <value>',
+      config.fields.scope ? `Filter by scope (${valuesHelp(config.fields.scope)})` : 'Filter by scope',
+    )
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
     .option('-q, --quiet', 'Minimal output (just task ID)')
@@ -37,13 +41,15 @@ export function createNextCommand(): Command {
 
       let candidates = taskFile.tasks.filter((t) => !terminal.includes(t.status));
 
-      candidates = candidates.filter((t) => !isBlocked(t, taskFile.tasks));
+      candidates = candidates.filter((t) => !isBlocked(t, taskFile.tasks, terminal));
 
       if (opts.scope) {
-        candidates = candidates.filter((t) => t.scope === opts.scope);
+        const v = (opts.scope as string).toLowerCase();
+        candidates = candidates.filter((t) => t.scope.toLowerCase() === v);
       }
       if (opts.type) {
-        candidates = candidates.filter((t) => t.type === (opts.type as string).toLowerCase());
+        const v = (opts.type as string).toLowerCase();
+        candidates = candidates.filter((t) => t.type.toLowerCase() === v);
       }
 
       const priorityOrder = Object.fromEntries(config.fields.priority.map((v, i) => [v, i]));
@@ -77,4 +83,5 @@ export function createNextCommand(): Command {
         console.log(formatTaskDetail(next, config));
       }
     });
+  return cmd;
 }

@@ -3,13 +3,14 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, taskWithFormattedId } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import { isValidField, normalizeField, isValidTransition, parseId, formatId } from '../core/config.js';
+import { isValidField, normalizeField, isValidTransition, parseId, formatId, type TaskConfig, DEFAULT_CONFIG } from '../core/config.js';
+import { valuesHelp } from '../shared/cli-config.js';
 
-export function createMoveCommand(): Command {
+export function createMoveCommand(config: TaskConfig = DEFAULT_CONFIG): Command {
   return new Command('move')
     .description('Transition task to a new status')
     .argument('<id>', 'Task ID')
-    .argument('<status>', 'Target status')
+    .argument('<status>', `Target status (${valuesHelp(config.fields.status)})`)
     .option('--force', 'Bypass transition validation')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')

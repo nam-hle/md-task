@@ -12,25 +12,31 @@ import { createBatchCommand } from './commands/batch.js';
 import { createMoveCommand } from './commands/move.js';
 import { createFormatCommand } from './commands/format.js';
 import { MdTaskError } from './shared/errors.js';
+import { loadCliConfig } from './shared/cli-config.js';
 
-const program = new Command();
+async function main(): Promise<void> {
+  const config = await loadCliConfig();
 
-program.name('md-task').description('CLI for managing tasks as markdown').version('0.1.0');
+  const program = new Command();
+  program.name('md-task').description('CLI for managing tasks as markdown').version('0.1.0');
 
-program.addCommand(createAddCommand());
-program.addCommand(createListCommand());
-program.addCommand(createUpdateCommand());
-program.addCommand(createRemoveCommand());
-program.addCommand(createViewCommand());
-program.addCommand(createInitCommand());
-program.addCommand(createNextCommand());
-program.addCommand(createSearchCommand());
-program.addCommand(createStatsCommand());
-program.addCommand(createBatchCommand());
-program.addCommand(createMoveCommand());
-program.addCommand(createFormatCommand());
+  program.addCommand(createAddCommand(config));
+  program.addCommand(createListCommand(config));
+  program.addCommand(createUpdateCommand(config));
+  program.addCommand(createRemoveCommand());
+  program.addCommand(createViewCommand());
+  program.addCommand(createInitCommand());
+  program.addCommand(createNextCommand(config));
+  program.addCommand(createSearchCommand());
+  program.addCommand(createStatsCommand());
+  program.addCommand(createBatchCommand());
+  program.addCommand(createMoveCommand(config));
+  program.addCommand(createFormatCommand());
 
-program.parseAsync(process.argv).catch((err: unknown) => {
+  await program.parseAsync(process.argv);
+}
+
+main().catch((err: unknown) => {
   if (err instanceof MdTaskError) {
     console.error(err.message);
     process.exitCode = err.exitCode;

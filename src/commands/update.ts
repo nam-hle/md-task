@@ -3,17 +3,21 @@ import { parseTaskFile, serializeTaskFile } from '../core/parser.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson, taskWithFormattedId } from '../shared/output.js';
 import { taskNotFound, fileNotFound, validationError } from '../shared/errors.js';
-import { isValidField, normalizeField, isValidTransition, parseId, parseIdList, formatId } from '../core/config.js';
+import { isValidField, normalizeField, isValidTransition, parseId, parseIdList, formatId, type TaskConfig, DEFAULT_CONFIG } from '../core/config.js';
+import { valuesHelp } from '../shared/cli-config.js';
 
-export function createUpdateCommand(): Command {
-  return new Command('update')
+export function createUpdateCommand(config: TaskConfig = DEFAULT_CONFIG): Command {
+  const cmd = new Command('update')
     .description('Update task attributes by ID')
     .argument('<id>', 'Task ID')
     .option('--description <value>', 'New description')
-    .option('--priority <value>', 'New priority')
-    .option('--scope <value>', 'New scope')
-    .option('--type <value>', 'New type')
-    .option('--status <value>', 'New status')
+    .option('--priority <value>', `New priority (${valuesHelp(config.fields.priority)})`)
+    .option('--type <value>', `New type (${valuesHelp(config.fields.type)})`)
+    .option('--status <value>', `New status (${valuesHelp(config.fields.status)})`)
+    .option(
+      '--scope <value>',
+      config.fields.scope ? `New scope (${valuesHelp(config.fields.scope)})` : 'New scope',
+    )
     .option('--depends-on <ids>', 'Comma-separated task IDs this depends on')
     .option('--note <text>', 'Append a note to the task')
     .option('--force', 'Bypass transition validation')
@@ -130,4 +134,5 @@ export function createUpdateCommand(): Command {
         console.log(`Updated task ${fid}: ${task.description}`);
       }
     });
+  return cmd;
 }

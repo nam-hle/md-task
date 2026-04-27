@@ -5,17 +5,21 @@ import { nextId } from '../core/id.js';
 import { readTasksFile, writeTasksFile, fileExists } from '../shared/file.js';
 import { formatJson } from '../shared/output.js';
 import { validationError } from '../shared/errors.js';
-import { isValidField, parseIdList, formatId } from '../core/config.js';
+import { isValidField, parseIdList, formatId, type TaskConfig, DEFAULT_CONFIG } from '../core/config.js';
 import { taskWithFormattedId } from '../shared/output.js';
+import { valuesHelp } from '../shared/cli-config.js';
 
-export function createAddCommand(): Command {
-  return new Command('add')
+export function createAddCommand(config: TaskConfig = DEFAULT_CONFIG): Command {
+  const cmd = new Command('add')
     .description('Add a new task')
     .argument('<description>', 'Task description')
-    .option('--priority <value>', 'Priority level')
-    .option('--scope <value>', 'Scope label')
-    .option('--type <value>', 'Task type')
-    .option('--status <value>', 'Task status')
+    .option('--priority <value>', `Priority (${valuesHelp(config.fields.priority)})`)
+    .option('--type <value>', `Type (${valuesHelp(config.fields.type)})`)
+    .option('--status <value>', `Status (${valuesHelp(config.fields.status)})`)
+    .option(
+      '--scope <value>',
+      config.fields.scope ? `Scope (${valuesHelp(config.fields.scope)})` : 'Scope',
+    )
     .option('--depends-on <ids>', 'Comma-separated task IDs this depends on')
     .option('--file <path>', 'Path to tasks file', 'TASKS.md')
     .option('--format <type>', 'Output format: text/json', 'text')
@@ -94,4 +98,5 @@ export function createAddCommand(): Command {
         console.log(`Created task ${fid}: ${task.description}`);
       }
     });
+  return cmd;
 }
